@@ -1,0 +1,7 @@
+{
+  "name": "PRAYER TIME DASHBOARD",
+  "description": "A responsive prayer time dashboard for Jalalabad Masjid & Islamic Centre at Birmingham with a modern glossy UI, Qibla compass, and monthly calendar.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
