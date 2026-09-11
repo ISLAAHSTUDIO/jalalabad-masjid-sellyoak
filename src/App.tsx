@@ -17,6 +17,7 @@ import {
   getNextJumuahTime,
   format12Hour
 } from './utils/prayerTimes';
+import { HeroSection } from './components/HeroSection';
 import { 
   Moon, 
   Sunrise, 
@@ -30,19 +31,14 @@ import {
   Settings,
   Home,
   Users,
-  Compass,
   BookOpen,
-  BookText,
   Volume2,
-  User,
   ChevronLeft,
   ChevronRight,
   LayoutGrid,
   Heart,
-  Table as TableIcon,
   CalendarDays,
   Bell,
-  BellOff,
   X,
   ExternalLink,
   Mail,
@@ -59,11 +55,80 @@ const iconMap = {
   MoonStar
 };
 
-const KaabaIcon = ({ className }: { className?: string }) => (
-  <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
-    <path d="M12 2L3 7v10l9 5 9-5V7l-9-5zm0 2.4l6.5 3.6L12 11.6 5.5 8 12 4.4zM5 9.5l6 3.3v6.7l-6-3.3V9.5zm8 10v-6.7l6-3.3v6.7l-6 3.3z" />
-  </svg>
-);
+const prayerCardConfig: Record<string, {
+  cardClass: string;
+  nextCardClass: string;
+  iconColor: string;
+  nextIconColor: string;
+  dividerBorder: string;
+  nextDividerBorder: string;
+  accentText: string;
+}> = {
+  fajr: {
+    cardClass: 'prayer-card-fajr',
+    nextCardClass: 'prayer-card-fajr is-next',
+    iconColor: 'text-indigo-600 dark:text-indigo-400',
+    nextIconColor: 'text-indigo-700 dark:text-indigo-300',
+    dividerBorder: 'border-indigo-200/90 dark:border-white/10',
+    nextDividerBorder: 'border-indigo-400 dark:border-indigo-400/80',
+    accentText: 'text-indigo-800 dark:text-indigo-300',
+  },
+  sunrise: {
+    cardClass: 'prayer-card-sunrise',
+    nextCardClass: 'prayer-card-sunrise is-next',
+    iconColor: 'text-rose-600 dark:text-rose-400',
+    nextIconColor: 'text-rose-700 dark:text-rose-300',
+    dividerBorder: 'border-rose-200/90 dark:border-white/10',
+    nextDividerBorder: 'border-rose-400 dark:border-rose-400/80',
+    accentText: 'text-rose-800 dark:text-rose-300',
+  },
+  zuhr: {
+    cardClass: 'prayer-card-zuhr',
+    nextCardClass: 'prayer-card-zuhr is-next',
+    iconColor: 'text-emerald-700 dark:text-emerald-400',
+    nextIconColor: 'text-emerald-700 dark:text-emerald-300',
+    dividerBorder: 'border-emerald-200/90 dark:border-white/10',
+    nextDividerBorder: 'border-emerald-400 dark:border-emerald-400/80',
+    accentText: 'text-emerald-800 dark:text-emerald-300',
+  },
+  asr: {
+    cardClass: 'prayer-card-asr',
+    nextCardClass: 'prayer-card-asr is-next',
+    iconColor: 'text-amber-700 dark:text-amber-400',
+    nextIconColor: 'text-amber-700 dark:text-amber-300',
+    dividerBorder: 'border-amber-200/90 dark:border-white/10',
+    nextDividerBorder: 'border-amber-400 dark:border-amber-400/80',
+    accentText: 'text-amber-800 dark:text-amber-300',
+  },
+  maghrib: {
+    cardClass: 'prayer-card-maghrib',
+    nextCardClass: 'prayer-card-maghrib is-next',
+    iconColor: 'text-orange-700 dark:text-orange-400',
+    nextIconColor: 'text-orange-700 dark:text-orange-300',
+    dividerBorder: 'border-orange-200/90 dark:border-white/10',
+    nextDividerBorder: 'border-orange-400 dark:border-orange-400/80',
+    accentText: 'text-orange-800 dark:text-orange-300',
+  },
+  ishā: {
+    cardClass: 'prayer-card-isha',
+    nextCardClass: 'prayer-card-isha is-next',
+    iconColor: 'text-sky-700 dark:text-sky-400',
+    nextIconColor: 'text-sky-700 dark:text-sky-300',
+    dividerBorder: 'border-sky-200/90 dark:border-white/10',
+    nextDividerBorder: 'border-sky-400 dark:border-sky-400/80',
+    accentText: 'text-sky-800 dark:text-sky-300',
+  },
+  isha: {
+    cardClass: 'prayer-card-isha',
+    nextCardClass: 'prayer-card-isha is-next',
+    iconColor: 'text-sky-700 dark:text-sky-400',
+    nextIconColor: 'text-sky-700 dark:text-sky-300',
+    dividerBorder: 'border-sky-200/90 dark:border-white/10',
+    nextDividerBorder: 'border-sky-400 dark:border-sky-400/80',
+    accentText: 'text-sky-800 dark:text-sky-300',
+  },
+};
+
 
 export default function App() {
   const currentTime = useCurrentTime();
@@ -95,6 +160,10 @@ export default function App() {
   const [reminderInterval, setReminderInterval] = useState<number>(() => {
     const saved = localStorage.getItem('reminderInterval');
     return saved ? parseInt(saved) : 10;
+  });
+  const [bgAnimationEnabled, setBgAnimationEnabled] = useState<boolean>(() => {
+    const saved = localStorage.getItem('bgAnimationEnabled');
+    return saved !== null ? saved === 'true' : true;
   });
   const [showSettings, setShowSettings] = useState(false);
   const [notifications, setNotifications] = useState<{ id: string; message: string; type: 'info' | 'success' }[]>([]);
@@ -132,6 +201,10 @@ export default function App() {
     localStorage.setItem('reminderInterval', String(reminderInterval));
   }, [reminderInterval]);
 
+  React.useEffect(() => {
+    localStorage.setItem('bgAnimationEnabled', String(bgAnimationEnabled));
+  }, [bgAnimationEnabled]);
+
   const addNotification = (message: string, type: 'info' | 'success' = 'info') => {
     const id = Math.random().toString(36).substr(2, 9);
     setNotifications(prev => [...prev, { id, message, type }]);
@@ -150,17 +223,21 @@ export default function App() {
     return timetableData.find(d => d.date === todayString) || timetableData[0]; // Fallback to first available date
   }, [todayString]);
 
+  // Tomorrow's data
+  const tomorrowData = useMemo(() => {
+    const tomorrow = new Date(currentTime);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowStr = formatDateString(tomorrow);
+    return timetableData.find(d => d.date === tomorrowStr);
+  }, [currentTime]);
+
   // Find selected date's data
   const selectedDateString = formatDateString(selectedDate);
   const selectedDayData = useMemo(() => {
     return timetableData.find(d => d.date === selectedDateString) || todayData;
   }, [selectedDateString, todayData]);
 
-  const nextPrayer = useMemo(() => getNextPrayer(todayData, currentTime), [todayData, currentTime]);
-  const timeRemaining = useMemo(() => {
-    if (!nextPrayer) return { days: 0, hours: 0, totalHours: 0, minutes: 0, seconds: 0 };
-    return formatTimeRemaining(nextPrayer.time, currentTime);
-  }, [nextPrayer, currentTime]);
+  const nextPrayer = useMemo(() => getNextPrayer(todayData, currentTime, tomorrowData), [todayData, currentTime, tomorrowData]);
 
   // Adhan Logic
   React.useEffect(() => {
@@ -226,7 +303,7 @@ export default function App() {
         if ("Notification" in window && Notification.permission === "granted") {
           new Notification("Prayer Reminder", {
             body: `${prayer.name} starts in ${reminderInterval} minutes.`,
-            icon: "/favicon.ico"
+            icon: "/logo.png"
           });
         }
 
@@ -252,12 +329,6 @@ export default function App() {
     year: 'numeric'
   });
 
-  const formattedTime = currentTime.toLocaleTimeString('en-US', {
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit'
-  });
-
   const handlePrevDay = () => {
     const prev = new Date(selectedDate);
     prev.setDate(prev.getDate() - 1);
@@ -276,7 +347,7 @@ export default function App() {
   };
 
   return (
-    <div className={`${theme === 'dark' ? 'dark' : ''} min-h-screen bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-emerald-50 dark:from-emerald-950 via-slate-50 dark:via-background-dark to-slate-50 dark:to-background-dark text-slate-800 dark:text-slate-100 pb-24 font-sans selection:bg-primary/30`}>
+    <div className={`${theme === 'dark' ? 'dark' : ''} min-h-screen relative text-slate-800 dark:text-slate-100 pb-24 font-sans selection:bg-primary/30 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-emerald-50 dark:from-emerald-950 via-slate-50 dark:via-background-dark to-slate-50 dark:to-background-dark`}>
       
       {/* Notifications Overlay - Positioned cleanly in top-right corner with high z-index */}
       <div className="fixed top-4 right-4 z-[300] flex flex-col gap-3 pointer-events-none max-w-xs w-full">
@@ -409,6 +480,22 @@ export default function App() {
                     </div>
                   </div>
                 )}
+
+                <div className="h-px bg-slate-200 dark:bg-slate-700/50 w-full"></div>
+
+                {/* Animated Background Toggle */}
+                <div className={`flex items-center justify-between ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
+                  <div className={`${language === 'ar' ? 'text-right' : 'text-left'}`}>
+                    <p className="text-sm font-bold text-slate-900 dark:text-white">{t.animatedBackground}</p>
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400">{bgAnimationEnabled ? t.enabled : t.disabled}</p>
+                  </div>
+                  <button 
+                    onClick={() => setBgAnimationEnabled(!bgAnimationEnabled)}
+                    className={`w-12 h-6 rounded-full transition-colors relative ${bgAnimationEnabled ? 'bg-primary' : 'bg-slate-300 dark:bg-slate-700'}`}
+                  >
+                    <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${bgAnimationEnabled ? (language === 'ar' ? 'right-7' : 'left-7') : (language === 'ar' ? 'right-1' : 'left-1')}`}></div>
+                  </button>
+                </div>
               </div>
 
               <div className="pt-2 flex gap-3">
@@ -418,14 +505,14 @@ export default function App() {
                     if ("Notification" in window && Notification.permission === "granted") {
                       new Notification("Test Notification", {
                         body: "This is a test prayer reminder notification.",
-                        icon: "/favicon.ico"
+                        icon: "/logo.png"
                       });
                     } else if ("Notification" in window && Notification.permission !== "denied") {
                       Notification.requestPermission().then(permission => {
                         if (permission === "granted") {
                           new Notification("Test Notification", {
                             body: "This is a test prayer reminder notification.",
-                            icon: "/favicon.ico"
+                            icon: "/logo.png"
                           });
                         }
                       });
@@ -468,13 +555,16 @@ export default function App() {
             >
               {t.services}
             </button>
-            <button 
-              onClick={() => handleNavigation('quran')}
-              className={`px-4 py-2 rounded-xl text-sm font-bold uppercase tracking-widest transition-all ${view === 'quran' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-slate-600 dark:text-slate-400 hover:bg-black/5 dark:hover:bg-white/5 flex items-center gap-2'}`}
+            <a 
+              href="https://islaahacademy.com/Quran-Study"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-4 py-2 rounded-xl text-sm font-bold uppercase tracking-widest transition-all text-slate-600 dark:text-slate-400 hover:bg-black/5 dark:hover:bg-white/5 flex items-center gap-2 hover:text-primary"
             >
               <BookOpen size={16} />
-              {t.quran}
-            </button>
+              {t.quranStudy}
+              <ExternalLink size={13} className="opacity-60" />
+            </a>
             <button 
               onClick={() => handleNavigation('donation')}
               className={`px-4 py-2 rounded-xl text-sm font-bold uppercase tracking-widest transition-all ${view === 'donation' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-primary hover:bg-primary/10 flex items-center gap-2'}`}
@@ -495,7 +585,7 @@ export default function App() {
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto w-full px-4 py-8 space-y-10">
+      <main className="max-w-5xl mx-auto w-full px-4 py-8 space-y-10 relative z-10">
         
         {/* Date & Time Section */}
         {['today', 'calendar', 'table'].includes(view) && (
@@ -519,47 +609,16 @@ export default function App() {
           </div>
         )}
 
-        {/* Next Prayer Hero */}
-        {['today', 'calendar', 'table'].includes(view) && nextPrayer && (
-          <div className="glass-panel rounded-3xl p-6 md:p-10 flex flex-col md:flex-row items-center justify-between gap-8 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
-            
-            <div className={`space-y-4 text-center ${language === 'ar' ? 'md:text-right' : 'md:text-left'} relative z-10`}>
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-primary/20 text-primary rounded-full text-xs font-bold uppercase tracking-widest shadow-[0_0_10px_rgba(var(--primary-rgb),0.2)] border border-primary/20">
-                {t.upcomingPrayer}
-              </div>
-              <h3 className="font-black text-slate-900 dark:text-white tracking-tight flex items-baseline gap-3" style={{ fontFamily: 'Verdana', fontSize: '45px' }}>
-                <span>{t[nextPrayer.id as keyof typeof t] || nextPrayer.name}</span>
-                <span className="text-2xl opacity-90 font-amiri text-primary">
-                  {language === 'en' ? translations.ar[nextPrayer.id as keyof typeof translations.ar] : translations.en[nextPrayer.id as keyof typeof translations.en]}
-                </span>
-              </h3>
-              <p className="text-slate-500 dark:text-slate-400 text-lg md:text-xl">
-                {nextPrayer.id === 'sunrise' ? t.beginsAt : (language === 'ar' ? 'الجماعة في' : 'Jama\'h at')} <span className="text-slate-900 dark:text-white font-semibold">{nextPrayer.time.toLocaleTimeString(language === 'ar' ? 'ar-SA' : 'en-US', { hour: '2-digit', minute: '2-digit' })}</span>
-              </p>
-            </div>
-
-            <div className="flex gap-3 md:gap-5 relative z-10" dir="ltr">
-              <div className="flex flex-col items-center gap-2">
-                <div className="bg-primary/10 border border-primary/30 text-slate-900 dark:text-white w-20 h-24 md:w-24 md:h-28 rounded-2xl flex items-center justify-center text-4xl md:text-5xl font-bold shadow-[0_0_20px_rgba(var(--primary-rgb),0.15)] backdrop-blur-md">
-                  {String(timeRemaining.totalHours).padStart(2, '0')}
-                </div>
-                <span className="text-[10px] md:text-xs uppercase font-bold text-slate-500 dark:text-slate-400 tracking-widest">{t.hours}</span>
-              </div>
-              <div className="flex flex-col items-center gap-2">
-                <div className="bg-primary/10 border border-primary/30 text-slate-900 dark:text-white w-20 h-24 md:w-24 md:h-28 rounded-2xl flex items-center justify-center text-4xl md:text-5xl font-bold shadow-[0_0_20px_rgba(var(--primary-rgb),0.15)] backdrop-blur-md">
-                  {String(timeRemaining.minutes).padStart(2, '0')}
-                </div>
-                <span className="text-[10px] md:text-xs uppercase font-bold text-slate-500 dark:text-slate-400 tracking-widest">{t.minutes}</span>
-              </div>
-              <div className="flex flex-col items-center gap-2">
-                <div className="bg-primary/10 border border-primary/30 text-slate-900 dark:text-white w-20 h-24 md:w-24 md:h-28 rounded-2xl flex items-center justify-center text-4xl md:text-5xl font-bold shadow-[0_0_20px_rgba(var(--primary-rgb),0.15)] backdrop-blur-md">
-                  {String(timeRemaining.seconds).padStart(2, '0')}
-                </div>
-                <span className="text-[10px] md:text-xs uppercase font-bold text-slate-500 dark:text-slate-400 tracking-widest">{t.seconds}</span>
-              </div>
-            </div>
-          </div>
+        {/* Next Prayer Dynamic Hero Section */}
+        {['today', 'calendar', 'table'].includes(view) && (
+          <HeroSection 
+            todayData={todayData}
+            tomorrowData={tomorrowData}
+            currentTime={currentTime}
+            language={language}
+            t={t}
+            bgAnimationEnabled={bgAnimationEnabled}
+          />
         )}
 
         {/* View Toggle */}
@@ -617,14 +676,14 @@ export default function App() {
             </div>
 
             <div className="glass-panel rounded-3xl overflow-hidden shadow-2xl max-w-2xl mx-auto">
-              <div className={`bg-black/5 dark:bg-white/5 px-6 py-4 flex justify-between items-center border-b border-black/10 dark:border-white/10 ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
-                <span className="text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">{t.prayer}</span>
+              <div className={`bg-black/5 dark:bg-slate-800/80 px-6 py-4 flex justify-between items-center border-b border-black/10 dark:border-slate-700/60 ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
+                <span className="text-xs font-bold uppercase tracking-widest text-slate-600 dark:text-slate-300">{t.prayer}</span>
                 <div className={`flex gap-12 ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
-                  <span className="text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">{t.begins}</span>
-                  <span className={`text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 w-16 ${language === 'ar' ? 'text-left' : 'text-right'}`}>{t.jamah}</span>
+                  <span className="text-xs font-bold uppercase tracking-widest text-slate-600 dark:text-slate-300">{t.begins}</span>
+                  <span className={`text-xs font-bold uppercase tracking-widest text-slate-600 dark:text-slate-300 w-16 ${language === 'ar' ? 'text-left' : 'text-right'}`}>{t.jamah}</span>
                 </div>
               </div>
-              <div className="divide-y divide-white/5">
+              <div className="divide-y divide-black/5 dark:divide-white/10">
                 {PRAYERS.map((prayer) => {
                   const Icon = iconMap[prayer.icon as keyof typeof iconMap];
                   const beginsKey = prayer.id === 'sunrise' ? 'sunrise' : `${prayer.id}_begins` as keyof PrayerData;
@@ -632,7 +691,7 @@ export default function App() {
                   const jamahTime = selectedDayData[jamahKey] as string;
                   
                   return (
-                    <div key={prayer.id} className={`px-6 py-5 flex justify-between items-center hover:bg-black/5 dark:hover:bg-white/[0.02] transition-colors group ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
+                    <div key={prayer.id} className={`px-6 py-5 flex justify-between items-center hover:bg-black/5 dark:hover:bg-white/[0.04] transition-colors group ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
                       <div className={`flex items-center gap-4 ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
                         <div className={`w-3 h-3 rounded-full shadow-[0_0_8px_rgba(var(--color-rgb),0.5)] ${
                           prayer.id === 'fajr' ? 'bg-indigo-400' :
@@ -643,16 +702,16 @@ export default function App() {
                           'bg-blue-400'
                         }`} />
                         <div className={`flex flex-col ${language === 'ar' ? 'items-end' : 'items-start'}`}>
-                          <span className="text-xl font-bold text-slate-800 dark:text-slate-100 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">
+                          <span className="text-xl font-bold text-slate-800 dark:text-white group-hover:text-slate-900 dark:group-hover:text-primary transition-colors">
                             {t[prayer.id as keyof typeof t] || prayer.name}
                           </span>
-                          <span className="text-sm font-bold text-slate-600 dark:text-slate-300 font-amiri">
+                          <span className="text-sm font-bold text-slate-600 dark:text-emerald-400 font-amiri">
                             {language === 'en' ? translations.ar[prayer.id as keyof typeof translations.ar] : translations.en[prayer.id as keyof typeof translations.en]}
                           </span>
                         </div>
                       </div>
                       <div className={`flex items-center gap-12 ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
-                        <span className="text-lg font-medium text-slate-500 dark:text-slate-400 tabular-nums">
+                        <span className="text-lg font-semibold text-slate-700 dark:text-slate-200 tabular-nums">
                           {format12Hour(selectedDayData[beginsKey] as string, language === 'ar' ? 'ar-SA' : 'en-US').replace(' AM', '').replace(' PM', '').replace(' ص', '').replace(' م', '')}
                         </span>
                         <span className={`text-2xl font-black text-slate-900 dark:text-white tabular-nums w-16 ${language === 'ar' ? 'text-left' : 'text-right'}`}>
@@ -687,36 +746,33 @@ export default function App() {
               // Simple check if passed (not perfectly accurate without full date logic, but good for UI demo)
               const prayerTime = parseTime(todayData[beginsKey] as string, currentTime);
               const isPassed = currentTime > prayerTime && !isNext;
+              const variant = prayerCardConfig[prayer.id] || prayerCardConfig.zuhr;
 
               return (
                 <div 
                   key={prayer.id} 
-                  className={`p-6 rounded-2xl transition-all duration-300 relative overflow-hidden group ${
+                  className={`p-6 rounded-[28px] transition-all duration-300 relative overflow-hidden group ${
                     isNext 
-                      ? 'glass-panel-active scale-[1.02]' 
-                      : 'glass-panel hover:bg-black/10 dark:hover:bg-white/10'
+                      ? `${variant.nextCardClass} rgb-border-box scale-[1.02] z-10` 
+                      : `glass-panel ${variant.cardClass} hover:shadow-md hover:scale-[1.01]`
                   }`}
                 >
-                  {isNext && (
-                    <div className={`absolute top-0 ${language === 'ar' ? 'left-0 rounded-br-xl' : 'right-0 rounded-bl-xl'} px-3 py-1 bg-primary text-[10px] font-black text-background-dark uppercase shadow-sm`}>
-                      {t.next}
-                    </div>
-                  )}
+                  {/* Next prayer button removed as upcoming prayer is already prominently showcased in the hero section */}
                   
                   <div className={`flex justify-between items-center mb-6 ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
                     <div className={`flex items-center gap-3 ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
-                      <Icon className={`${isNext ? 'text-primary' : 'text-slate-500 dark:text-slate-400 group-hover:text-primary/80'} transition-colors`} size={24} />
+                      <Icon className={`${isNext ? variant.nextIconColor : `${variant.iconColor} group-hover:scale-110`} transition-all duration-300`} size={24} />
                       <div className={`flex flex-col ${language === 'ar' ? 'items-end' : 'items-start'}`}>
-                        <span className={`font-bold text-xl ${isNext ? 'text-slate-900 dark:text-white' : 'text-slate-700 dark:text-slate-200'}`}>
+                        <span className={`font-bold text-xl ${isNext ? 'text-slate-900 dark:text-white' : 'text-slate-800 dark:text-slate-100'}`}>
                           {t[prayer.id as keyof typeof t] || prayer.name}
                         </span>
-                        <span className="text-sm font-bold text-slate-600 dark:text-slate-300 font-amiri">
+                        <span className="text-sm font-bold text-slate-600 dark:text-emerald-400 font-uthmani">
                           {language === 'en' ? translations.ar[prayer.id as keyof typeof translations.ar] : translations.en[prayer.id as keyof typeof translations.en]}
                         </span>
                       </div>
                     </div>
                     {isPassed && !isNext && (
-                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest bg-black/5 dark:bg-white/5 px-2 py-1 rounded-md">{t.passed}</span>
+                      <span className="text-[10px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-widest bg-slate-100 dark:bg-slate-800/90 px-2 py-1 rounded-md border border-slate-300 dark:border-slate-700 shadow-xs">{t.passed}</span>
                     )}
                   </div>
 
@@ -724,22 +780,22 @@ export default function App() {
                     {prayer.id !== 'sunrise' ? (
                       <>
                         <div className={`space-y-1.5 ${language === 'ar' ? 'text-right' : ''}`}>
-                          <p className={`text-[10px] uppercase font-bold tracking-widest ${isNext ? 'text-primary/80' : 'text-slate-500'}`}>{t.jamah}</p>
-                          <p className={`text-3xl font-bold ${isNext ? 'text-primary' : 'text-primary/80'}`}>
+                          <p className={`text-[10px] uppercase font-bold tracking-widest ${isNext ? variant.accentText : 'text-slate-600 dark:text-slate-300'}`}>{t.jamah}</p>
+                          <p className={`text-3xl font-black ${isNext ? 'text-slate-900 dark:text-white' : 'text-slate-900 dark:text-white'}`}>
                             {format12Hour(todayData[jamahKey] as string, language === 'ar' ? 'ar-SA' : 'en-US')}
                           </p>
                         </div>
-                        <div className={`space-y-1.5 ${language === 'ar' ? 'text-left border-r pr-6' : 'text-right border-l pl-6'} ${isNext ? 'border-primary/30' : 'border-black/10 dark:border-white/10'}`}>
-                          <p className={`text-[10px] uppercase font-bold tracking-widest ${isNext ? 'text-primary/80' : 'text-slate-500'}`}>{t.begins}</p>
-                          <p className={`text-lg font-medium ${isNext ? 'text-slate-900 dark:text-white' : 'text-slate-600 dark:text-slate-300'}`}>
+                        <div className={`space-y-1.5 ${language === 'ar' ? `text-left border-r pr-6 ${isNext ? variant.nextDividerBorder : variant.dividerBorder}` : `text-right border-l pl-6 ${isNext ? variant.nextDividerBorder : variant.dividerBorder}`}`}>
+                          <p className={`text-[10px] uppercase font-bold tracking-widest ${isNext ? variant.accentText : 'text-slate-600 dark:text-slate-300'}`}>{t.begins}</p>
+                          <p className={`text-lg font-bold ${isNext ? 'text-slate-900 dark:text-white' : 'text-slate-800 dark:text-slate-200'}`}>
                             {format12Hour(todayData[beginsKey] as string, language === 'ar' ? 'ar-SA' : 'en-US')}
                           </p>
                         </div>
                       </>
                     ) : (
                       <div className={`space-y-1.5 ${language === 'ar' ? 'text-right' : ''}`}>
-                        <p className={`text-[10px] uppercase font-bold tracking-widest ${isNext ? 'text-primary/80' : 'text-slate-500'}`}>{t.begins}</p>
-                        <p className={`text-3xl font-bold ${isNext ? 'text-slate-900 dark:text-white' : 'text-slate-600 dark:text-slate-300'}`}>
+                        <p className={`text-[10px] uppercase font-bold tracking-widest ${isNext ? variant.accentText : 'text-slate-600 dark:text-slate-300'}`}>{t.begins}</p>
+                        <p className={`text-3xl font-black ${isNext ? 'text-slate-900 dark:text-white' : 'text-slate-900 dark:text-white'}`}>
                           {format12Hour(todayData[beginsKey] as string, language === 'ar' ? 'ar-SA' : 'en-US')}
                         </p>
                       </div>
@@ -753,7 +809,7 @@ export default function App() {
 
         {/* About Us Section in Home */}
         {view === 'today' && (
-          <div className="glass-panel p-6 md:p-8 rounded-2xl animate-in fade-in slide-in-from-bottom-4 duration-500 mt-8 relative overflow-hidden">
+          <div className="glass-panel p-6 md:p-8 rounded-[28px] animate-in fade-in slide-in-from-bottom-4 duration-500 mt-8 relative overflow-hidden">
             <div className={`absolute -right-20 -top-20 w-64 h-64 bg-primary/5 rounded-full blur-3xl pointer-events-none`}></div>
             <div className={`flex flex-col gap-6 relative z-10 ${language === 'ar' ? 'text-right' : 'text-left'}`}>
               <div className={`flex items-center gap-3 mb-2 ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
@@ -762,10 +818,10 @@ export default function App() {
                 </div>
                 <h2 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">{t.aboutUs}</h2>
               </div>
-              <div className="space-y-4 text-slate-600 dark:text-slate-300 leading-relaxed max-w-4xl font-medium">
+              <div className="space-y-4 text-slate-700 dark:text-slate-200 leading-relaxed max-w-4xl font-medium">
                 <p>{t.aboutUsText1}</p>
-                <div className="pl-4 border-l-4 border-primary/30 py-1 my-4 bg-primary/5 rounded-r-xl p-4">
-                  <p className="italic text-slate-700 dark:text-slate-200">{t.aboutUsText2}</p>
+                <div className="pl-4 border-l-4 border-primary/50 py-2 my-4 bg-primary/10 dark:bg-slate-800/80 rounded-r-xl p-4 border dark:border-slate-700/60">
+                  <p className="italic text-slate-900 dark:text-white font-medium">{t.aboutUsText2}</p>
                 </div>
                 <p>{t.aboutUsText3}</p>
               </div>
@@ -783,6 +839,7 @@ export default function App() {
                 <button 
                   onClick={() => {
                     const prev = new Date(selectedDate);
+                    prev.setDate(1);
                     prev.setMonth(prev.getMonth() - 1);
                     setSelectedDate(prev);
                   }}
@@ -795,6 +852,7 @@ export default function App() {
                   value={selectedDate.getMonth()}
                   onChange={(e) => {
                     const newDate = new Date(selectedDate);
+                    newDate.setDate(1);
                     newDate.setMonth(parseInt(e.target.value));
                     setSelectedDate(newDate);
                   }}
@@ -808,6 +866,7 @@ export default function App() {
                 <button 
                   onClick={() => {
                     const next = new Date(selectedDate);
+                    next.setDate(1);
                     next.setMonth(next.getMonth() + 1);
                     setSelectedDate(next);
                   }}
@@ -818,7 +877,7 @@ export default function App() {
               </div>
             </div>
 
-            <div className="glass-panel rounded-2xl overflow-hidden shadow-xl">
+            <div className="glass-panel rounded-[28px] overflow-hidden shadow-xl">
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-sm whitespace-nowrap" dir={language === 'ar' ? 'rtl' : 'ltr'}>
                   <thead>
@@ -928,7 +987,7 @@ export default function App() {
                 { title: t.marriageServices, desc: t.marriageServicesDesc, icon: Heart },
                 { title: t.communityEvents, desc: t.communityEventsDesc, icon: CalendarDays }
               ].map((service, idx) => (
-                <div key={idx} className="glass-panel p-6 rounded-2xl hover:bg-primary/5 transition-all border border-black/5 dark:border-white/5 group">
+                <div key={idx} className="glass-panel p-6 rounded-[28px] hover:bg-primary/5 transition-all border border-black/5 dark:border-white/5 group">
                   <div className="bg-primary/10 p-3 rounded-xl text-primary w-fit mb-4 group-hover:bg-primary group-hover:text-white transition-all">
                     <service.icon size={24} />
                   </div>
@@ -951,12 +1010,12 @@ export default function App() {
                 {t.readListenQuran}
               </p>
               <a 
-                href="https://quran.com/" 
+                href="https://islaahacademy.com/Quran-Study" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-xl font-bold hover:scale-[1.02] transition-all shadow-lg shadow-primary/20"
               >
-                {t.openQuran} <ExternalLink size={18} />
+                {t.openQuranStudy} <ExternalLink size={18} />
               </a>
             </div>
             
@@ -1100,12 +1159,12 @@ export default function App() {
 
         {/* Jumu'ah Section */}
         {view !== 'quran' && view !== 'services' && view !== 'donation' && (
-          <div className="glass-panel bg-primary/5 rounded-2xl p-6 md:p-8 relative overflow-hidden">
+          <div className="glass-panel bg-primary/5 rounded-[28px] p-6 md:p-8 relative overflow-hidden">
             <div className="absolute -right-10 -top-10 w-40 h-40 bg-primary/10 rounded-full blur-3xl pointer-events-none"></div>
             
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10 mb-6">
               <div className="flex items-center gap-4">
-                <div className="bg-primary/20 p-3 rounded-xl text-primary shadow-inner">
+                <div className="bg-primary/20 p-3 rounded-2xl text-primary shadow-inner">
                   <Users size={24} />
                 </div>
                 <div>
@@ -1118,26 +1177,26 @@ export default function App() {
               <div className="flex gap-2 md:gap-3">
                 {jumuahTimeRemaining.days > 0 && (
                   <div className="flex flex-col items-center gap-1">
-                    <div className="bg-black/5 dark:bg-black/30 border border-black/10 dark:border-white/10 text-slate-900 dark:text-white w-12 h-14 md:w-14 md:h-16 rounded-xl flex items-center justify-center text-xl md:text-2xl font-bold backdrop-blur-md">
+                    <div className="bg-black/5 dark:bg-black/30 border border-black/10 dark:border-white/10 text-slate-900 dark:text-white w-12 h-14 md:w-14 md:h-16 rounded-2xl flex items-center justify-center text-xl md:text-2xl font-bold backdrop-blur-md">
                       {String(jumuahTimeRemaining.days).padStart(2, '0')}
                     </div>
                     <span className="text-[9px] md:text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-widest">Days</span>
                   </div>
                 )}
                 <div className="flex flex-col items-center gap-1">
-                  <div className="bg-black/5 dark:bg-black/30 border border-black/10 dark:border-white/10 text-slate-900 dark:text-white w-12 h-14 md:w-14 md:h-16 rounded-xl flex items-center justify-center text-xl md:text-2xl font-bold backdrop-blur-md">
+                  <div className="bg-black/5 dark:bg-black/30 border border-black/10 dark:border-white/10 text-slate-900 dark:text-white w-12 h-14 md:w-14 md:h-16 rounded-2xl flex items-center justify-center text-xl md:text-2xl font-bold backdrop-blur-md">
                     {String(jumuahTimeRemaining.hours).padStart(2, '0')}
                   </div>
                   <span className="text-[9px] md:text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-widest">Hours</span>
                 </div>
                 <div className="flex flex-col items-center gap-1">
-                  <div className="bg-black/5 dark:bg-black/30 border border-black/10 dark:border-white/10 text-slate-900 dark:text-white w-12 h-14 md:w-14 md:h-16 rounded-xl flex items-center justify-center text-xl md:text-2xl font-bold backdrop-blur-md">
+                  <div className="bg-black/5 dark:bg-black/30 border border-black/10 dark:border-white/10 text-slate-900 dark:text-white w-12 h-14 md:w-14 md:h-16 rounded-2xl flex items-center justify-center text-xl md:text-2xl font-bold backdrop-blur-md">
                     {String(jumuahTimeRemaining.minutes).padStart(2, '0')}
                   </div>
                   <span className="text-[9px] md:text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-widest">Mins</span>
                 </div>
                 <div className="flex flex-col items-center gap-1">
-                  <div className="bg-black/5 dark:bg-black/30 border border-black/10 dark:border-white/10 text-slate-900 dark:text-white w-12 h-14 md:w-14 md:h-16 rounded-xl flex items-center justify-center text-xl md:text-2xl font-bold backdrop-blur-md">
+                  <div className="bg-black/5 dark:bg-black/30 border border-black/10 dark:border-white/10 text-slate-900 dark:text-white w-12 h-14 md:w-14 md:h-16 rounded-2xl flex items-center justify-center text-xl md:text-2xl font-bold backdrop-blur-md">
                     {String(jumuahTimeRemaining.seconds).padStart(2, '0')}
                   </div>
                   <span className="text-[9px] md:text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-widest">Secs</span>
@@ -1146,11 +1205,11 @@ export default function App() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10">
-              <div className="flex items-center justify-between p-5 bg-black/5 dark:bg-black/20 backdrop-blur-sm rounded-xl border border-black/5 dark:border-white/5 hover:border-primary/30 transition-colors">
+              <div className="flex items-center justify-between p-5 bg-black/5 dark:bg-black/20 backdrop-blur-sm rounded-2xl border border-black/5 dark:border-white/5 hover:border-primary/30 transition-colors">
                 <span className="font-medium text-slate-600 dark:text-slate-300">Bayan Start</span>
                 <span className="text-2xl font-bold text-primary">12:45 PM</span>
               </div>
-              <div className="flex items-center justify-between p-5 bg-black/5 dark:bg-black/20 backdrop-blur-sm rounded-xl border border-black/5 dark:border-white/5 hover:border-primary/30 transition-colors">
+              <div className="flex items-center justify-between p-5 bg-black/5 dark:bg-black/20 backdrop-blur-sm rounded-2xl border border-black/5 dark:border-white/5 hover:border-primary/30 transition-colors">
                 <span className="font-medium text-slate-600 dark:text-slate-300">Khutbah Start</span>
                 <span className="text-2xl font-bold text-primary">1:30 PM</span>
               </div>
@@ -1165,7 +1224,7 @@ export default function App() {
               <div className="bg-white p-2 rounded-2xl shadow-sm border border-black/5 inline-flex mb-4">
                 <img src="/logo.png" alt="Jalalabad Mosque Logo" className="h-16 object-contain" />
               </div>
-              <p className={`text-sm text-slate-500 dark:text-slate-400 max-w-sm ${language === 'ar' ? 'text-right' : 'text-left'}`}>
+              <p className={`text-sm text-slate-600 dark:text-slate-200 max-w-sm ${language === 'ar' ? 'text-right' : 'text-left'}`}>
                 {language === 'ar' ? 'يهدف مسجد جلال آباد والمركز الإسلامي في برمنغهام إلى تعزيز روح الأخوة والأخوات.' : 'Jalalabad Masjid & Islamic Centre at Birmingham aims to promote ethos of brotherhood and sisterhood.'}
               </p>
             </div>
@@ -1177,7 +1236,7 @@ export default function App() {
                 </div>
                 <h3 className="text-xl font-bold text-slate-900 dark:text-white">{t.contactUs}</h3>
               </div>
-              <div className="space-y-3 text-sm text-slate-600 dark:text-slate-400">
+              <div className="space-y-3 text-sm text-slate-700 dark:text-slate-200">
                 <p className={`flex items-start gap-3 ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
                   <strong className="text-slate-900 dark:text-white mt-0.5"><MapPin size={16} /></strong>
                   <span>24-26 Dartmouth Rd, Selly Oak, Birmingham B29 6DR</span>
@@ -1210,7 +1269,7 @@ export default function App() {
               ></iframe>
             </div>
           </div>
-          <div className={`text-xs text-slate-400 dark:text-slate-500 pt-6 border-t border-black/5 dark:border-white/5 flex flex-col md:flex-row justify-between items-center gap-2 ${language === 'ar' ? 'flex-row-reverse md:flex-row-reverse' : ''}`}>
+          <div className={`text-xs text-slate-600 dark:text-slate-300 font-medium pt-6 border-t border-black/5 dark:border-white/10 flex flex-col md:flex-row justify-between items-center gap-2 ${language === 'ar' ? 'flex-row-reverse md:flex-row-reverse' : ''}`}>
             <p>© {new Date().getFullYear()} {t.appName}. {t.allRightsReserved}</p>
             <p>Charity No: 1105603</p>
           </div>
@@ -1226,13 +1285,15 @@ export default function App() {
           <Home size={22} className={view === 'today' ? 'stroke-[2.5px]' : 'stroke-[2px]'} />
           <span className="text-[9px] font-bold uppercase tracking-widest">Home</span>
         </button>
-        <button 
-          onClick={() => handleNavigation('quran')}
-          className={`flex flex-col items-center gap-1.5 flex-1 transition-colors ${view === 'quran' ? 'text-primary' : 'text-slate-500 dark:text-slate-400 hover:text-primary'}`}
+        <a 
+          href="https://islaahacademy.com/Quran-Study"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex flex-col items-center gap-1.5 flex-1 transition-colors text-slate-500 dark:text-slate-400 hover:text-primary"
         >
-          <BookOpen size={22} className={view === 'quran' ? 'stroke-[2.5px]' : 'stroke-[2px]'} />
-          <span className="text-[9px] font-bold uppercase tracking-widest">Qur'an</span>
-        </button>
+          <BookOpen size={22} className="stroke-[2px]" />
+          <span className="text-[9px] font-bold uppercase tracking-widest">{t.quranStudy}</span>
+        </a>
         <button 
           onClick={() => handleNavigation('services')}
           className={`flex flex-col items-center gap-1.5 flex-1 transition-colors ${view === 'services' ? 'text-primary' : 'text-slate-500 dark:text-slate-400 hover:text-primary'}`}

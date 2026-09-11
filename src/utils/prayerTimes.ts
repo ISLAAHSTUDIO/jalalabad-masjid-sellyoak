@@ -32,16 +32,16 @@ export function parseTime(timeStr: string | undefined, date: Date): Date {
   return newDate;
 }
 
-export function getNextPrayer(todayData: PrayerData, currentTime: Date) {
+export function getNextPrayer(todayData: PrayerData, currentTime: Date, tomorrowData?: PrayerData) {
   if (!todayData) return null;
 
   const prayerTimes = [
-    { id: 'fajr', time: parseTime(todayData["fajr_jama'h"], currentTime), name: 'Fajr' },
-    { id: 'sunrise', time: parseTime(todayData.sunrise, currentTime), name: 'Sunrise' },
-    { id: 'zuhr', time: parseTime(todayData["zuhr_jama'h"], currentTime), name: 'Zuhr' },
-    { id: 'asr', time: parseTime(todayData["asr_jama'h"], currentTime), name: 'Asr' },
-    { id: 'maghrib', time: parseTime(todayData["maghrib_jama'h"], currentTime), name: 'Maghrib' },
-    { id: 'ishā', time: parseTime(todayData["ishā_jama'h"], currentTime), name: 'ishā' },
+    { id: 'fajr', time: parseTime(todayData["fajr_jama'h"], currentTime), name: 'Fajr', beginsTime: parseTime(todayData.fajr_begins, currentTime) },
+    { id: 'sunrise', time: parseTime(todayData.sunrise, currentTime), name: 'Sunrise', beginsTime: parseTime(todayData.sunrise, currentTime) },
+    { id: 'zuhr', time: parseTime(todayData["zuhr_jama'h"], currentTime), name: 'Zuhr', beginsTime: parseTime(todayData.zuhr_begins, currentTime) },
+    { id: 'asr', time: parseTime(todayData["asr_jama'h"], currentTime), name: 'Asr', beginsTime: parseTime(todayData.asr_begins, currentTime) },
+    { id: 'maghrib', time: parseTime(todayData["maghrib_jama'h"], currentTime), name: 'Maghrib', beginsTime: parseTime(todayData.maghrib_begins, currentTime) },
+    { id: 'ishā', time: parseTime(todayData["ishā_jama'h"], currentTime), name: 'Ishā', beginsTime: parseTime(todayData.ishā_begins, currentTime) },
   ];
 
   for (const prayer of prayerTimes) {
@@ -51,8 +51,63 @@ export function getNextPrayer(todayData: PrayerData, currentTime: Date) {
   }
   
   // If all prayers for today have passed, next is Fajr tomorrow
-  // For simplicity in this demo, we just return null or Fajr of today if we don't have tomorrow's data
-  return { id: 'fajr', time: parseTime(todayData["fajr_jama'h"], new Date(currentTime.getTime() + 86400000)), name: 'Fajr (Tomorrow)' };
+  const tomorrowDate = new Date(currentTime);
+  tomorrowDate.setDate(tomorrowDate.getDate() + 1);
+
+  const tomorrowFajrTime = tomorrowData 
+    ? parseTime(tomorrowData["fajr_jama'h"], tomorrowDate)
+    : parseTime(todayData["fajr_jama'h"], tomorrowDate);
+  const tomorrowFajrBegins = tomorrowData
+    ? parseTime(tomorrowData.fajr_begins, tomorrowDate)
+    : parseTime(todayData.fajr_begins, tomorrowDate);
+
+  return { id: 'fajr', time: tomorrowFajrTime, name: 'Fajr (Tomorrow)', beginsTime: tomorrowFajrBegins };
+}
+
+export function getCurrentPrayerWindow(todayData: PrayerData, currentTime: Date, tomorrowData?: PrayerData) {
+  if (!todayData) return null;
+
+  const prayers = [
+    { id: 'fajr', time: parseTime(todayData["fajr_jama'h"], currentTime), begins: parseTime(todayData.fajr_begins, currentTime), name: 'Fajr' },
+    { id: 'sunrise', time: parseTime(todayData.sunrise, currentTime), begins: parseTime(todayData.sunrise, currentTime), name: 'Sunrise' },
+    { id: 'zuhr', time: parseTime(todayData["zuhr_jama'h"], currentTime), begins: parseTime(todayData.zuhr_begins, currentTime), name: 'Zuhr' },
+    { id: 'asr', time: parseTime(todayData["asr_jama'h"], currentTime), begins: parseTime(todayData.asr_begins, currentTime), name: 'Asr' },
+    { id: 'maghrib', time: parseTime(todayData["maghrib_jama'h"], currentTime), begins: parseTime(todayData.maghrib_begins, currentTime), name: 'Maghrib' },
+    { id: 'ishā', time: parseTime(todayData["ishā_jama'h"], currentTime), begins: parseTime(todayData.ishā_begins, currentTime), name: 'Ishā' },
+  ];
+
+  const nextPrayer = getNextPrayer(todayData, currentTime, tomorrowData);
+  if (!nextPrayer) return null;
+
+  // Find index of next prayer
+  const nextIdx = prayers.findIndex(p => p.id === nextPrayer.id);
+  
+  let prevPrayerTime: Date;
+  if (nextIdx <= 0) {
+    // Before Fajr or Fajr tomorrow: prev is Isha yesterday / Isha today
+    prevPrayerTime = parseTime(todayData["ishā_jama'h"], currentTime);
+    if (currentTime < prayers[0].time) {
+      // Very early morning before today's Fajr: subtract 1 day from prevPrayerTime
+      prevPrayerTime.setDate(prevPrayerTime.getDate() - 1);
+    }
+  } else {
+    prevPrayerTime = prayers[nextIdx - 1].time;
+  }
+
+  const totalWindowMs = Math.max(1, nextPrayer.time.getTime() - prevPrayerTime.getTime());
+  const elapsedMs = Math.max(0, currentTime.getTime() - prevPrayerTime.getTime());
+  const progressPercent = Math.min(100, Math.max(0, (elapsedMs / totalWindowMs) * 100));
+
+  const diffMinutes = (nextPrayer.time.getTime() - currentTime.getTime()) / 60000;
+  const isImminent = diffMinutes <= 15 && diffMinutes >= 0;
+
+  return {
+    nextPrayer,
+    prevPrayerTime,
+    progressPercent: Math.round(progressPercent),
+    isImminent,
+    diffMinutes: Math.round(diffMinutes)
+  };
 }
 
 export function formatTimeRemaining(targetTime: Date, currentTime: Date) {
