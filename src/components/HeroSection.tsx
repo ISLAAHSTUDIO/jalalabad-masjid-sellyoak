@@ -14,7 +14,8 @@ import {
 import { Language, translations } from '../translations';
 import { 
   Clock, 
-  BellRing
+  BellRing,
+  Sun
 } from 'lucide-react';
 
 import { AnimatedBackground } from './AnimatedBackground';
@@ -71,6 +72,7 @@ export const HeroSection: React.FC<ExtendedHeroSectionProps> = ({
           glowClass: 'shadow-2xl shadow-rose-950/40',
           name: 'Sunrise'
         };
+      case 'jumuah':
       case 'zuhr':
         return {
           chip: 'bg-emerald-500/25 text-emerald-200 border-emerald-400/40',
@@ -78,7 +80,7 @@ export const HeroSection: React.FC<ExtendedHeroSectionProps> = ({
           borderClass: 'border-2 border-emerald-500/70',
           ringClass: 'ring-4 ring-emerald-500/20',
           glowClass: 'shadow-2xl shadow-emerald-950/40',
-          name: 'Zuhr'
+          name: prayerId === 'jumuah' ? "Jumu'ah" : 'Zuhr'
         };
       case 'asr':
         return {
@@ -132,18 +134,25 @@ export const HeroSection: React.FC<ExtendedHeroSectionProps> = ({
               <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2.5">
                 <span className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest border shadow-sm backdrop-blur-md ${atmosphericConfig.chip}`}>
                   <span className="w-2 h-2 rounded-full bg-current animate-ping"></span>
-                  {t.upcomingPrayer}
+                  {nextPrayer.id === 'sunrise' ? t.upcomingSunrise : t.upcomingPrayer}
                 </span>
 
-                {isImminent && (
+                {isImminent && nextPrayer.id !== 'sunrise' && (
                   <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-rose-500/30 text-rose-200 border border-rose-400/50 rounded-full text-xs font-black uppercase tracking-wider animate-radar backdrop-blur-md">
                     <BellRing size={13} />
                     {t.adhanImminent}
                   </span>
                 )}
+
+                {isImminent && nextPrayer.id === 'sunrise' && (
+                  <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-rose-500/30 text-rose-200 border border-rose-400/50 rounded-full text-xs font-black uppercase tracking-wider animate-radar backdrop-blur-md">
+                    <Sun size={13} />
+                    {t.sunriseApproaching}
+                  </span>
+                )}
               </div>
 
-              {/* Big Prayer Name with Arabic Calligraphy Accent */}
+              {/* Big Prayer / Event Name with Arabic Calligraphy Accent */}
               <div className={`flex items-baseline justify-center lg:justify-start gap-4 flex-wrap ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
                 <h3 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight text-white drop-shadow-md">
                   {t[nextPrayer.id as keyof typeof t] || nextPrayer.name}
@@ -153,23 +162,38 @@ export const HeroSection: React.FC<ExtendedHeroSectionProps> = ({
                 </span>
               </div>
 
-              {/* Exact Jama'ah & Begins Timings with high clarity */}
+              {/* Exact Jama'ah / Time & Begins Timings with high clarity */}
               <div className={`flex flex-wrap items-center justify-center lg:justify-start gap-3 text-slate-200 text-sm md:text-base`}>
                 <div className="bg-black/60 border-2 border-white/20 px-4 py-2 rounded-2xl shadow-md backdrop-blur-md flex items-center gap-2">
-                  <span className="text-slate-300 font-semibold">{language === 'ar' ? 'الجماعة:' : 'Jama\'ah:'}</span>
+                  <span className="text-slate-300 font-semibold">
+                    {nextPrayer.id === 'sunrise'
+                      ? (language === 'ar' ? 'وقت الشروق:' : 'Sunrise Time:')
+                      : (language === 'ar' ? 'الجماعة:' : 'Jama\'ah:')
+                    }
+                  </span>
                   <span className="font-black text-white text-base md:text-lg">
                     {nextPrayer.id === 'sunrise' 
                       ? format12Hour(todayData.sunrise, language === 'ar' ? 'ar-SA' : 'en-US')
-                      : format12Hour(todayData[`${nextPrayer.id}_jama'h` as keyof PrayerData] as string, language === 'ar' ? 'ar-SA' : 'en-US')
+                      : nextPrayer.id === 'jumuah'
+                        ? (language === 'ar' ? '1:30 م' : '1:30 PM')
+                        : format12Hour(todayData[`${nextPrayer.id}_jama'h` as keyof PrayerData] as string, language === 'ar' ? 'ar-SA' : 'en-US')
                     }
                   </span>
                 </div>
 
                 {nextPrayer.id !== 'sunrise' && (
                   <div className="bg-black/60 border-2 border-white/20 px-4 py-2 rounded-2xl shadow-md backdrop-blur-md flex items-center gap-2">
-                    <span className="text-slate-300 font-semibold">{language === 'ar' ? 'البداية:' : 'Begins:'}</span>
+                    <span className="text-slate-300 font-semibold">
+                      {nextPrayer.id === 'jumuah' 
+                        ? (language === 'ar' ? 'بداية البيان:' : 'Bayan Start:') 
+                        : (language === 'ar' ? 'البداية:' : 'Begins:')
+                      }
+                    </span>
                     <span className="font-bold text-white/95">
-                      {format12Hour(todayData[`${nextPrayer.id}_begins` as keyof PrayerData] as string, language === 'ar' ? 'ar-SA' : 'en-US')}
+                      {nextPrayer.id === 'jumuah'
+                        ? (language === 'ar' ? '12:45 م' : '12:45 PM')
+                        : format12Hour(todayData[`${nextPrayer.id}_begins` as keyof PrayerData] as string, language === 'ar' ? 'ar-SA' : 'en-US')
+                      }
                     </span>
                   </div>
                 )}
@@ -180,7 +204,7 @@ export const HeroSection: React.FC<ExtendedHeroSectionProps> = ({
             <div className="flex flex-col items-center gap-3">
               <span className="text-[11px] font-black uppercase tracking-widest text-slate-300 flex items-center gap-1.5 drop-shadow-sm">
                 <Clock size={13} className="text-emerald-400" />
-                {t.countdownToSalah}
+                {nextPrayer.id === 'sunrise' ? t.timeToSunrise : t.countdownToSalah}
               </span>
 
               <div className="flex gap-2.5 sm:gap-4 relative" dir="ltr">

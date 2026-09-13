@@ -51,63 +51,13 @@
 
 @layer utilities {
   .glass-panel {
-    @apply bg-white/95 dark:bg-slate-900/90 backdrop-blur-xl relative border border-slate-200/90 dark:border-slate-800/90 shadow-md dark:shadow-2xl;
-  }
-  .glass-panel::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    padding: 0.5px;
-    background: conic-gradient(
-      from var(--border-angle, 0deg),
-      #ff0000,
-      #ff7f00,
-      #ffff00,
-      #00ff00,
-      #0000ff,
-      #4b0082,
-      #8b00ff,
-      #ff0000
-    );
-    -webkit-mask: 
-      linear-gradient(#fff 0 0) content-box, 
-      linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-    animation: rgb-border-spin 4s linear infinite;
-    pointer-events: none;
+    @apply bg-white/95 dark:bg-slate-900/90 backdrop-blur-xl relative border border-b-2 border-slate-200/90 dark:border-slate-800/90 shadow-md dark:shadow-2xl;
   }
   .glass-panel-active {
-    @apply bg-emerald-50/95 dark:bg-slate-900/95 shadow-md dark:shadow-[0_0_20px_rgba(var(--primary-rgb),0.2)] relative border border-emerald-300 dark:border-primary/50;
-  }
-  .glass-panel-active::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    padding: 0.5px;
-    background: conic-gradient(
-      from var(--border-angle, 0deg),
-      #ff0000,
-      #ff7f00,
-      #ffff00,
-      #00ff00,
-      #0000ff,
-      #4b0082,
-      #8b00ff,
-      #ff0000
-    );
-    -webkit-mask: 
-      linear-gradient(#fff 0 0) content-box, 
-      linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-    animation: rgb-border-spin 3s linear infinite;
-    pointer-events: none;
+    @apply bg-emerald-50/95 dark:bg-slate-900/95 shadow-md dark:shadow-[0_0_20px_rgba(var(--primary-rgb),0.2)] relative border border-b-2 border-emerald-300 dark:border-primary/50;
   }
 
-  /* Non-Animated Static RGB Border Utility (Thinned out: very thin top/sides, sleek bottom) */
+  /* Smooth Animated RGB Flowing Border for Upcoming & Next Box (Thin top/left/right, thicker bottom) */
   .rgb-border-box {
     position: relative;
     border: none !important;
@@ -120,37 +70,48 @@
     padding-top: 0.75px;
     padding-left: 0.75px;
     padding-right: 0.75px;
-    padding-bottom: 2px;
-    background: linear-gradient(
-      90deg,
-      #ff1e56 0%,
-      #ff7b00 18%,
-      #ffc800 34%,
-      #00d26a 52%,
-      #00b4d8 68%,
-      #6c5ce7 84%,
-      #e84393 100%
+    padding-bottom: 2.75px;
+    background: conic-gradient(
+      from var(--border-angle, 0deg),
+      #ff0000,
+      #ff7f00,
+      #ffff00,
+      #00ff00,
+      #0000ff,
+      #4b0082,
+      #8b00ff,
+      #ff0000
     );
     -webkit-mask: 
       linear-gradient(#fff 0 0) content-box, 
       linear-gradient(#fff 0 0);
     -webkit-mask-composite: xor;
     mask-composite: exclude;
+    animation: rgb-border-spin 6s linear infinite;
     pointer-events: none;
     z-index: 20;
+    will-change: --border-angle;
   }
 
-  /* Upcoming Hero Card - slightly pronounced sleek bottom border */
+  /* Upcoming Hero Card & Jumu'ah Card - thin top/sides, sleek thicker bottom border */
   .upcoming-rgb-box::before {
     padding-top: 0.85px;
     padding-left: 0.85px;
     padding-right: 0.85px;
-    padding-bottom: 2.5px;
+    padding-bottom: 3.25px;
+    animation: rgb-border-spin 7s linear infinite;
   }
 
-  /* Prayer Card Variant Colors for Light Mode & Dark Mode */
+  @media (prefers-reduced-motion: reduce) {
+    .rgb-border-box::before,
+    .upcoming-rgb-box::before {
+      animation: none !important;
+    }
+  }
+
+  /* Prayer Card Variant Colors for Light Mode & Dark Mode (thin top/sides, thicker bottom) */
   .prayer-card-fajr {
-    @apply bg-indigo-50/80 border border-indigo-200/90 dark:bg-slate-900/90 dark:border-indigo-500/30;
+    @apply bg-indigo-50/80 border border-b-2 border-indigo-200/90 dark:bg-slate-900/90 dark:border-indigo-500/30;
   }
   .prayer-card-fajr:hover {
     @apply bg-indigo-100/80 dark:bg-slate-800/90 dark:border-indigo-500/50;
@@ -160,7 +121,7 @@
   }
 
   .prayer-card-sunrise {
-    @apply bg-rose-50/90 border border-rose-200/90 dark:bg-slate-900/90 dark:border-rose-500/30;
+    @apply bg-rose-50/90 border border-b-2 border-rose-200/90 dark:bg-slate-900/90 dark:border-rose-500/30;
   }
   .prayer-card-sunrise:hover {
     @apply bg-rose-100/85 dark:bg-slate-800/90 dark:border-rose-500/50;
@@ -170,7 +131,7 @@
   }
 
   .prayer-card-zuhr {
-    @apply bg-emerald-50/80 border border-emerald-200/90 dark:bg-slate-900/90 dark:border-emerald-500/30;
+    @apply bg-emerald-50/80 border border-b-2 border-emerald-200/90 dark:bg-slate-900/90 dark:border-emerald-500/30;
   }
   .prayer-card-zuhr:hover {
     @apply bg-emerald-100/80 dark:bg-slate-800/90 dark:border-emerald-500/50;
@@ -180,7 +141,7 @@
   }
 
   .prayer-card-asr {
-    @apply bg-amber-50/80 border border-amber-200/90 dark:bg-slate-900/90 dark:border-amber-500/30;
+    @apply bg-amber-50/80 border border-b-2 border-amber-200/90 dark:bg-slate-900/90 dark:border-amber-500/30;
   }
   .prayer-card-asr:hover {
     @apply bg-amber-100/80 dark:bg-slate-800/90 dark:border-amber-500/50;
@@ -190,7 +151,7 @@
   }
 
   .prayer-card-maghrib {
-    @apply bg-orange-50/80 border border-orange-200/90 dark:bg-slate-900/90 dark:border-orange-500/30;
+    @apply bg-orange-50/80 border border-b-2 border-orange-200/90 dark:bg-slate-900/90 dark:border-orange-500/30;
   }
   .prayer-card-maghrib:hover {
     @apply bg-orange-100/80 dark:bg-slate-800/90 dark:border-orange-500/50;
@@ -201,7 +162,7 @@
 
   .prayer-card-isha,
   .prayer-card-ishā {
-    @apply bg-sky-50/80 border border-sky-200/90 dark:bg-slate-900/90 dark:border-sky-500/30;
+    @apply bg-sky-50/80 border border-b-2 border-sky-200/90 dark:bg-slate-900/90 dark:border-sky-500/30;
   }
   .prayer-card-isha:hover,
   .prayer-card-ishā:hover {
@@ -217,6 +178,12 @@
   syntax: "<angle>";
   inherits: true;
   initial-value: 0turn;
+}
+
+@keyframes smooth-border-spin {
+  to {
+    --border-angle: 1turn;
+  }
 }
 
 @keyframes rgb-border-spin {

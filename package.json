@@ -10,7 +10,7 @@
     "preview": "vite preview",
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit",
-    "deploy": "npx wrangler pages deploy dist"
+    "deploy": "wrangler pages deploy dist --project-name=jalalabad-masjid --branch=\"Jalalabad Masjid\" --commit-dirty=true"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.14",

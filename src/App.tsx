@@ -12,12 +12,15 @@ import {
   PrayerData, 
   getNextPrayer, 
   formatTimeRemaining, 
-  formatDateString,
-  parseTime,
-  getNextJumuahTime,
-  format12Hour
+  formatDateString, 
+  parseTime, 
+  getNextJumuahTime, 
+  format12Hour,
+  getPrayersForDate
 } from './utils/prayerTimes';
 import { HeroSection } from './components/HeroSection';
+import { AnimatedBackground } from './components/AnimatedBackground';
+import { ContactForm } from './components/ContactForm';
 import { 
   Moon, 
   Sunrise, 
@@ -43,7 +46,8 @@ import {
   ExternalLink,
   Mail,
   Globe,
-  Phone
+  Phone,
+  Copy
 } from 'lucide-react';
 
 const iconMap = {
@@ -52,7 +56,8 @@ const iconMap = {
   Sun,
   SunDim,
   Sunset,
-  MoonStar
+  MoonStar,
+  Users
 };
 
 const prayerCardConfig: Record<string, {
@@ -83,6 +88,15 @@ const prayerCardConfig: Record<string, {
     accentText: 'text-rose-800 dark:text-rose-300',
   },
   zuhr: {
+    cardClass: 'prayer-card-zuhr',
+    nextCardClass: 'prayer-card-zuhr is-next',
+    iconColor: 'text-emerald-700 dark:text-emerald-400',
+    nextIconColor: 'text-emerald-700 dark:text-emerald-300',
+    dividerBorder: 'border-emerald-200/90 dark:border-white/10',
+    nextDividerBorder: 'border-emerald-400 dark:border-emerald-400/80',
+    accentText: 'text-emerald-800 dark:text-emerald-300',
+  },
+  jumuah: {
     cardClass: 'prayer-card-zuhr',
     nextCardClass: 'prayer-card-zuhr is-next',
     iconColor: 'text-emerald-700 dark:text-emerald-400',
@@ -243,9 +257,10 @@ export default function App() {
   React.useEffect(() => {
     if (!adhanEnabled || !todayData) return;
 
+    const isFriday = currentTime.getDay() === 5;
     const jamaahTimes = [
       { name: 'Fajr', time: todayData["fajr_jama'h"] },
-      { name: 'Zuhr', time: todayData["zuhr_jama'h"] },
+      { name: isFriday ? "Jumu'ah" : 'Zuhr', time: isFriday ? '13:30' : todayData["zuhr_jama'h"] },
       { name: 'Asr', time: todayData["asr_jama'h"] },
       { name: 'Maghrib', time: todayData["maghrib_jama'h"] },
       { name: 'Isha', time: todayData["ishā_jama'h"] },
@@ -276,9 +291,10 @@ export default function App() {
   React.useEffect(() => {
     if (!remindersEnabled || !todayData) return;
 
+    const isFriday = currentTime.getDay() === 5;
     const prayerTimes = [
       { name: 'Fajr', time: todayData.fajr_begins },
-      { name: 'Zuhr', time: todayData.zuhr_begins },
+      { name: isFriday ? "Jumu'ah" : 'Zuhr', time: todayData.zuhr_begins },
       { name: 'Asr', time: todayData.asr_begins },
       { name: 'Maghrib', time: todayData.maghrib_begins },
       { name: 'Isha', time: todayData.ishā_begins },
@@ -572,6 +588,15 @@ export default function App() {
               <Heart size={16} className={view === 'donation' ? 'fill-white' : 'fill-primary/20'} />
               {t.donation}
             </button>
+            <button 
+              onClick={() => {
+                const el = document.getElementById('contact-section');
+                if (el) el.scrollIntoView({ behavior: 'smooth' });
+              }}
+              className="px-4 py-2 rounded-xl text-sm font-bold uppercase tracking-widest transition-all text-slate-600 dark:text-slate-400 hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer"
+            >
+              {t.contactUs}
+            </button>
           </nav>
           <div className="flex items-center gap-2 relative">
             <button 
@@ -737,11 +762,13 @@ export default function App() {
         {/* Prayer Cards Grid (Today View) */}
         {view === 'today' && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            {PRAYERS.map((prayer) => {
-              const Icon = iconMap[prayer.icon as keyof typeof iconMap];
+            {getPrayersForDate(currentTime).map((prayer) => {
+              const Icon = iconMap[prayer.icon as keyof typeof iconMap] || iconMap.Sun;
               const isNext = nextPrayer?.id === prayer.id;
-              const beginsKey = prayer.id === 'sunrise' ? 'sunrise' : `${prayer.id}_begins` as keyof PrayerData;
-              const jamahKey = `${prayer.id}_jama'h` as keyof PrayerData;
+              const beginsKey = prayer.id === 'sunrise' 
+                ? 'sunrise' 
+                : `${prayer.id === 'jumuah' ? 'zuhr' : prayer.id}_begins` as keyof PrayerData;
+              const jamahKey = `${prayer.id === 'jumuah' ? 'zuhr' : prayer.id}_jama'h` as keyof PrayerData;
               
               // Simple check if passed (not perfectly accurate without full date logic, but good for UI demo)
               const prayerTime = parseTime(todayData[beginsKey] as string, currentTime);
@@ -763,9 +790,16 @@ export default function App() {
                     <div className={`flex items-center gap-3 ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
                       <Icon className={`${isNext ? variant.nextIconColor : `${variant.iconColor} group-hover:scale-110`} transition-all duration-300`} size={24} />
                       <div className={`flex flex-col ${language === 'ar' ? 'items-end' : 'items-start'}`}>
-                        <span className={`font-bold text-xl ${isNext ? 'text-slate-900 dark:text-white' : 'text-slate-800 dark:text-slate-100'}`}>
-                          {t[prayer.id as keyof typeof t] || prayer.name}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className={`font-bold text-xl ${isNext ? 'text-slate-900 dark:text-white' : 'text-slate-800 dark:text-slate-100'}`}>
+                            {t[prayer.id as keyof typeof t] || prayer.name}
+                          </span>
+                          {prayer.id === 'jumuah' && (
+                            <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-300 uppercase tracking-wider bg-emerald-100 dark:bg-emerald-950/80 px-2 py-0.5 rounded-full border border-emerald-300 dark:border-emerald-600">
+                              {language === 'ar' ? 'يوم الجمعة' : 'Friday'}
+                            </span>
+                          )}
+                        </div>
                         <span className="text-sm font-bold text-slate-600 dark:text-emerald-400 font-uthmani">
                           {language === 'en' ? translations.ar[prayer.id as keyof typeof translations.ar] : translations.en[prayer.id as keyof typeof translations.en]}
                         </span>
@@ -782,19 +816,27 @@ export default function App() {
                         <div className={`space-y-1.5 ${language === 'ar' ? 'text-right' : ''}`}>
                           <p className={`text-[10px] uppercase font-bold tracking-widest ${isNext ? variant.accentText : 'text-slate-600 dark:text-slate-300'}`}>{t.jamah}</p>
                           <p className={`text-3xl font-black ${isNext ? 'text-slate-900 dark:text-white' : 'text-slate-900 dark:text-white'}`}>
-                            {format12Hour(todayData[jamahKey] as string, language === 'ar' ? 'ar-SA' : 'en-US')}
+                            {prayer.id === 'jumuah' 
+                              ? (language === 'ar' ? '1:30 م' : '1:30 PM')
+                              : format12Hour(todayData[jamahKey] as string, language === 'ar' ? 'ar-SA' : 'en-US')
+                            }
                           </p>
                         </div>
                         <div className={`space-y-1.5 ${language === 'ar' ? `text-left border-r pr-6 ${isNext ? variant.nextDividerBorder : variant.dividerBorder}` : `text-right border-l pl-6 ${isNext ? variant.nextDividerBorder : variant.dividerBorder}`}`}>
-                          <p className={`text-[10px] uppercase font-bold tracking-widest ${isNext ? variant.accentText : 'text-slate-600 dark:text-slate-300'}`}>{t.begins}</p>
+                          <p className={`text-[10px] uppercase font-bold tracking-widest ${isNext ? variant.accentText : 'text-slate-600 dark:text-slate-300'}`}>
+                            {prayer.id === 'jumuah' ? (language === 'ar' ? 'بداية البيان' : 'Bayan Start') : t.begins}
+                          </p>
                           <p className={`text-lg font-bold ${isNext ? 'text-slate-900 dark:text-white' : 'text-slate-800 dark:text-slate-200'}`}>
-                            {format12Hour(todayData[beginsKey] as string, language === 'ar' ? 'ar-SA' : 'en-US')}
+                            {prayer.id === 'jumuah'
+                              ? (language === 'ar' ? '12:45 م' : '12:45 PM')
+                              : format12Hour(todayData[beginsKey] as string, language === 'ar' ? 'ar-SA' : 'en-US')
+                            }
                           </p>
                         </div>
                       </>
                     ) : (
                       <div className={`space-y-1.5 ${language === 'ar' ? 'text-right' : ''}`}>
-                        <p className={`text-[10px] uppercase font-bold tracking-widest ${isNext ? variant.accentText : 'text-slate-600 dark:text-slate-300'}`}>{t.begins}</p>
+                        <p className={`text-[10px] uppercase font-bold tracking-widest ${isNext ? variant.accentText : 'text-slate-600 dark:text-slate-300'}`}>{t.sunriseTime}</p>
                         <p className={`text-3xl font-black ${isNext ? 'text-slate-900 dark:text-white' : 'text-slate-900 dark:text-white'}`}>
                           {format12Hour(todayData[beginsKey] as string, language === 'ar' ? 'ar-SA' : 'en-US')}
                         </p>
@@ -932,7 +974,14 @@ export default function App() {
                             <td className={`px-6 py-4 font-semibold ${isToday ? 'text-slate-900 dark:text-white' : 'text-slate-800 dark:text-slate-100'}`}>{format12Hour(day.sunrise, language === 'ar' ? 'ar-SA' : 'en-US')}</td>
                             <td className="px-6 py-4">
                               <div className={`flex flex-col ${language === 'ar' ? 'items-end' : 'items-start'}`}>
-                                <span className={`font-semibold ${isToday ? 'text-slate-900 dark:text-white' : 'text-slate-800 dark:text-slate-100'}`}>{format12Hour(day["zuhr_jama'h"], language === 'ar' ? 'ar-SA' : 'en-US')}</span>
+                                <div className="flex items-center gap-1.5">
+                                  <span className={`font-semibold ${isToday ? 'text-slate-900 dark:text-white' : 'text-slate-800 dark:text-slate-100'}`}>{format12Hour(day["zuhr_jama'h"], language === 'ar' ? 'ar-SA' : 'en-US')}</span>
+                                  {new Date(day.date).getDay() === 5 && (
+                                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700">
+                                      {language === 'ar' ? 'الجمعة' : 'Jumu\'ah'}
+                                    </span>
+                                  )}
+                                </div>
                                 <span className="text-xs text-primary/70">{format12Hour(day.zuhr_begins, language === 'ar' ? 'ar-SA' : 'en-US')}</span>
                               </div>
                             </td>
@@ -1120,7 +1169,7 @@ export default function App() {
                   <div className="bg-black/5 dark:bg-white/5 p-4 rounded-xl space-y-2 text-sm">
                     <div className="flex justify-between">
                       <span className="text-slate-500 dark:text-slate-400">{t.bankName}:</span>
-                      <span className="font-semibold text-slate-900 dark:text-white">Barclay Bank</span>
+                      <span className="font-semibold text-slate-900 dark:text-white">Barclays Bank</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-slate-500 dark:text-slate-400">{t.accountName}:</span>
@@ -1128,11 +1177,50 @@ export default function App() {
                     </div>
                     <div className="flex justify-between">
                       <span className="text-slate-500 dark:text-slate-400">{t.sortCode}:</span>
-                      <span className="font-semibold text-slate-900 dark:text-white">20-07-82</span>
+                      <span className="font-semibold font-mono text-slate-900 dark:text-white">20-07-82</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-slate-500 dark:text-slate-400">{t.accountNumber}:</span>
-                      <span className="font-semibold text-slate-900 dark:text-white">73478653</span>
+                      <span className="font-semibold font-mono text-slate-900 dark:text-white">73478653</span>
+                    </div>
+
+                    {/* International Transfer */}
+                    <div className="border-t border-black/10 dark:border-white/10 pt-3 mt-3 space-y-2">
+                      <div className="text-xs font-bold uppercase tracking-wider text-primary">{t.internationalTransfer}</div>
+                      
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 bg-black/5 dark:bg-white/5 p-2.5 rounded-xl">
+                        <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">{t.iban}:</span>
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono font-bold text-slate-900 dark:text-white text-xs sm:text-sm select-all">GB37 BARC 2007 8273 4786 53</span>
+                          <button 
+                            onClick={() => {
+                              navigator.clipboard.writeText('GB37BARC20078273478653');
+                              addNotification(t.copiedToClipboard, 'success');
+                            }}
+                            title="Copy IBAN"
+                            className="p-1 rounded-md text-slate-400 hover:text-primary hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+                          >
+                            <Copy size={13} />
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 bg-black/5 dark:bg-white/5 p-2.5 rounded-xl">
+                        <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">{t.swiftBic}:</span>
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono font-bold text-slate-900 dark:text-white text-xs sm:text-sm select-all">BARCGB22</span>
+                          <button 
+                            onClick={() => {
+                              navigator.clipboard.writeText('BARCGB22');
+                              addNotification(t.copiedToClipboard, 'success');
+                            }}
+                            title="Copy SWIFT/BIC"
+                            className="p-1 rounded-md text-slate-400 hover:text-primary hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+                          >
+                            <Copy size={13} />
+                          </button>
+                        </div>
+                      </div>
                     </div>
                     <div className="flex justify-between border-t border-black/5 dark:border-white/5 pt-2 mt-2">
                       <span className="text-slate-500 dark:text-slate-400">Charity No:</span>
@@ -1157,121 +1245,208 @@ export default function App() {
           </div>
         )}
 
-        {/* Jumu'ah Section */}
+        {/* Jumu'ah Section - Styled identical to Upcoming Box */}
         {view !== 'quran' && view !== 'services' && view !== 'donation' && (
-          <div className="glass-panel bg-primary/5 rounded-[28px] p-6 md:p-8 relative overflow-hidden">
-            <div className="absolute -right-10 -top-10 w-40 h-40 bg-primary/10 rounded-full blur-3xl pointer-events-none"></div>
-            
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10 mb-6">
-              <div className="flex items-center gap-4">
-                <div className="bg-primary/20 p-3 rounded-2xl text-primary shadow-inner">
-                  <Users size={24} />
-                </div>
-                <div>
-                  <h3 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Jumu'ah Times <span className="text-slate-500 dark:text-slate-400 font-medium text-lg">(Friday)</span></h3>
-                  <p className="text-primary/80 text-sm mt-1">Next Jumu'ah in:</p>
-                </div>
-              </div>
-              
-              {/* Jumu'ah Countdown */}
-              <div className="flex gap-2 md:gap-3">
-                {jumuahTimeRemaining.days > 0 && (
-                  <div className="flex flex-col items-center gap-1">
-                    <div className="bg-black/5 dark:bg-black/30 border border-black/10 dark:border-white/10 text-slate-900 dark:text-white w-12 h-14 md:w-14 md:h-16 rounded-2xl flex items-center justify-center text-xl md:text-2xl font-bold backdrop-blur-md">
-                      {String(jumuahTimeRemaining.days).padStart(2, '0')}
-                    </div>
-                    <span className="text-[9px] md:text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-widest">Days</span>
-                  </div>
-                )}
-                <div className="flex flex-col items-center gap-1">
-                  <div className="bg-black/5 dark:bg-black/30 border border-black/10 dark:border-white/10 text-slate-900 dark:text-white w-12 h-14 md:w-14 md:h-16 rounded-2xl flex items-center justify-center text-xl md:text-2xl font-bold backdrop-blur-md">
-                    {String(jumuahTimeRemaining.hours).padStart(2, '0')}
-                  </div>
-                  <span className="text-[9px] md:text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-widest">Hours</span>
-                </div>
-                <div className="flex flex-col items-center gap-1">
-                  <div className="bg-black/5 dark:bg-black/30 border border-black/10 dark:border-white/10 text-slate-900 dark:text-white w-12 h-14 md:w-14 md:h-16 rounded-2xl flex items-center justify-center text-xl md:text-2xl font-bold backdrop-blur-md">
-                    {String(jumuahTimeRemaining.minutes).padStart(2, '0')}
-                  </div>
-                  <span className="text-[9px] md:text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-widest">Mins</span>
-                </div>
-                <div className="flex flex-col items-center gap-1">
-                  <div className="bg-black/5 dark:bg-black/30 border border-black/10 dark:border-white/10 text-slate-900 dark:text-white w-12 h-14 md:w-14 md:h-16 rounded-2xl flex items-center justify-center text-xl md:text-2xl font-bold backdrop-blur-md">
-                    {String(jumuahTimeRemaining.seconds).padStart(2, '0')}
-                  </div>
-                  <span className="text-[9px] md:text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-widest">Secs</span>
-                </div>
-              </div>
-            </div>
+          <div className="relative rounded-[32px] overflow-hidden transition-all duration-700 shadow-2xl shadow-emerald-950/40 rgb-border-box upcoming-rgb-box bg-[#060a14] mt-8 text-white">
+            {/* Animated Celestial Background */}
+            <AnimatedBackground theme="dark" enabled={bgAnimationEnabled} isHeroContained={true} />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10">
-              <div className="flex items-center justify-between p-5 bg-black/5 dark:bg-black/20 backdrop-blur-sm rounded-2xl border border-black/5 dark:border-white/5 hover:border-primary/30 transition-colors">
-                <span className="font-medium text-slate-600 dark:text-slate-300">Bayan Start</span>
-                <span className="text-2xl font-bold text-primary">12:45 PM</span>
+            {/* Main Content Container */}
+            <div className="relative z-10 p-6 md:p-10 flex flex-col gap-8">
+              
+              {/* Header Body: Jumu'ah Information & Live Countdown */}
+              <div className="flex flex-col lg:flex-row items-center justify-between gap-8 animate-in fade-in zoom-in-95 duration-500">
+                
+                {/* Left Column: Jumu'ah Status & Big Title */}
+                <div className={`space-y-4 text-center ${language === 'ar' ? 'lg:text-right' : 'lg:text-left'} flex-1`}>
+                  
+                  <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2.5">
+                    <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest border shadow-sm backdrop-blur-md bg-emerald-500/25 text-emerald-200 border-emerald-400/40">
+                      <span className="w-2 h-2 rounded-full bg-current animate-ping"></span>
+                      {language === 'ar' ? 'صلاة الجمعة الأسبوعية' : 'Weekly Friday Jumu\'ah'}
+                    </span>
+                  </div>
+
+                  {/* Big Prayer Name with Arabic Calligraphy Accent */}
+                  <div className={`flex items-baseline justify-center lg:justify-start gap-4 flex-wrap ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
+                    <h3 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight text-white drop-shadow-md">
+                      {language === 'ar' ? 'صلاة الجمعة' : 'Jumu\'ah Times'}
+                    </h3>
+                    <span className="text-3xl sm:text-4xl font-uthmani text-emerald-400 font-bold drop-shadow-sm">
+                      الجمعة
+                    </span>
+                  </div>
+
+                  {/* Timings Pills with Translucent Backdrop Blur */}
+                  <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 text-slate-200 text-sm md:text-base">
+                    <div className="bg-black/60 border-2 border-white/20 px-4 py-2 rounded-2xl shadow-md backdrop-blur-md flex items-center gap-2">
+                      <span className="text-slate-300 font-semibold">{language === 'ar' ? 'الخطبة والجماعة:' : 'Khutbah & Jama\'ah:'}</span>
+                      <span className="font-black text-white text-base md:text-lg">1:30 PM</span>
+                    </div>
+
+                    <div className="bg-black/60 border-2 border-white/20 px-4 py-2 rounded-2xl shadow-md backdrop-blur-md flex items-center gap-2">
+                      <span className="text-slate-300 font-semibold">{language === 'ar' ? 'بداية البيان:' : 'Bayan Start:'}</span>
+                      <span className="font-bold text-white/95">12:45 PM</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right Column: Live Countdown Glass Cards */}
+                <div className="flex flex-col items-center gap-3">
+                  <span className="text-[11px] font-black uppercase tracking-widest text-slate-300 flex items-center gap-1.5 drop-shadow-sm">
+                    <Clock size={13} className="text-emerald-400" />
+                    {language === 'ar' ? 'العد التنازلي لصلاة الجمعة' : 'Countdown to Jumu\'ah'}
+                  </span>
+
+                  <div className="flex gap-2.5 sm:gap-4 relative items-center" dir="ltr">
+                    {/* Days Block if > 0 */}
+                    {jumuahTimeRemaining.days > 0 && (
+                      <>
+                        <div className="flex flex-col items-center gap-2 group">
+                          <div className="bg-black/70 border-2 border-white/25 text-white w-18 h-22 sm:w-22 sm:h-26 md:w-24 md:h-28 rounded-[22px] flex flex-col items-center justify-center text-3xl sm:text-4xl md:text-5xl font-black shadow-xl backdrop-blur-xl relative overflow-hidden group-hover:border-emerald-400 transition-colors">
+                            <span className="relative z-10 tabular-nums">{String(jumuahTimeRemaining.days).padStart(2, '0')}</span>
+                          </div>
+                          <span className="text-[10px] sm:text-xs uppercase font-bold text-slate-300 tracking-wider">Days</span>
+                        </div>
+                        <div className="text-2xl sm:text-3xl font-black text-slate-400 self-center -mt-6 animate-pulse">:</div>
+                      </>
+                    )}
+
+                    {/* Hours Block */}
+                    <div className="flex flex-col items-center gap-2 group">
+                      <div className="bg-black/70 border-2 border-white/25 text-white w-18 h-22 sm:w-22 sm:h-26 md:w-24 md:h-28 rounded-[22px] flex flex-col items-center justify-center text-3xl sm:text-4xl md:text-5xl font-black shadow-xl backdrop-blur-xl relative overflow-hidden group-hover:border-emerald-400 transition-colors">
+                        <span className="relative z-10 tabular-nums">{String(jumuahTimeRemaining.hours).padStart(2, '0')}</span>
+                      </div>
+                      <span className="text-[10px] sm:text-xs uppercase font-bold text-slate-300 tracking-wider">{t.hours}</span>
+                    </div>
+
+                    {/* Colon Divider */}
+                    <div className="text-2xl sm:text-3xl font-black text-slate-400 self-center -mt-6 animate-pulse">:</div>
+
+                    {/* Minutes Block */}
+                    <div className="flex flex-col items-center gap-2 group">
+                      <div className="bg-black/70 border-2 border-white/25 text-white w-18 h-22 sm:w-22 sm:h-26 md:w-24 md:h-28 rounded-[22px] flex flex-col items-center justify-center text-3xl sm:text-4xl md:text-5xl font-black shadow-xl backdrop-blur-xl relative overflow-hidden group-hover:border-emerald-400 transition-colors">
+                        <span className="relative z-10 tabular-nums">{String(jumuahTimeRemaining.minutes).padStart(2, '0')}</span>
+                      </div>
+                      <span className="text-[10px] sm:text-xs uppercase font-bold text-slate-300 tracking-wider">{t.minutes}</span>
+                    </div>
+
+                    {/* Colon Divider */}
+                    <div className="text-2xl sm:text-3xl font-black text-slate-400 self-center -mt-6 animate-pulse">:</div>
+
+                    {/* Seconds Block (with glowing emerald border) */}
+                    <div className="flex flex-col items-center gap-2 group">
+                      <div className="bg-emerald-950/60 border-2 border-emerald-400 text-emerald-300 w-18 h-22 sm:w-22 sm:h-26 md:w-24 md:h-28 rounded-[22px] flex flex-col items-center justify-center text-3xl sm:text-4xl md:text-5xl font-black shadow-[0_0_25px_rgba(16,185,129,0.35)] backdrop-blur-xl relative overflow-hidden">
+                        <span className="relative z-10 tabular-nums">{String(jumuahTimeRemaining.seconds).padStart(2, '0')}</span>
+                      </div>
+                      <span className="text-[10px] sm:text-xs uppercase font-bold text-emerald-400 tracking-wider">{t.seconds}</span>
+                    </div>
+                  </div>
+                </div>
+
               </div>
-              <div className="flex items-center justify-between p-5 bg-black/5 dark:bg-black/20 backdrop-blur-sm rounded-2xl border border-black/5 dark:border-white/5 hover:border-primary/30 transition-colors">
-                <span className="font-medium text-slate-600 dark:text-slate-300">Khutbah Start</span>
-                <span className="text-2xl font-bold text-primary">1:30 PM</span>
+
+              {/* Schedule Blocks */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10">
+                <div className="flex items-center justify-between p-5 bg-black/60 border-2 border-white/15 backdrop-blur-md rounded-2xl shadow-lg hover:border-emerald-400/50 transition-all group">
+                  <div className="flex items-center gap-3">
+                    <div className="w-3 h-3 rounded-full bg-emerald-400 shadow-[0_0_10px_#10b981]"></div>
+                    <span className="font-semibold text-slate-200 text-base sm:text-lg">{language === 'ar' ? 'بداية البيان' : 'Bayan Start'}</span>
+                  </div>
+                  <span className="text-2xl sm:text-3xl font-black text-emerald-400 tracking-tight">12:45 PM</span>
+                </div>
+
+                <div className="flex items-center justify-between p-5 bg-black/60 border-2 border-white/15 backdrop-blur-md rounded-2xl shadow-lg hover:border-emerald-400/50 transition-all group">
+                  <div className="flex items-center gap-3">
+                    <div className="w-3 h-3 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_10px_#10b981]"></div>
+                    <span className="font-semibold text-slate-200 text-base sm:text-lg">{language === 'ar' ? 'بداية الخطبة والجماعة' : 'Khutbah & Jama\'ah'}</span>
+                  </div>
+                  <span className="text-2xl sm:text-3xl font-black text-emerald-400 tracking-tight">1:30 PM</span>
+                </div>
               </div>
+
             </div>
           </div>
         )}
 
+        {/* Contact Us Section */}
+        <section id="contact-section" className="mt-16 pt-8 scroll-mt-24">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            {/* Contact Form */}
+            <div className="lg:col-span-7">
+              <ContactForm language={language} onNotify={addNotification} />
+            </div>
+
+            {/* Mosque Info & Map */}
+            <div className="lg:col-span-5 flex flex-col gap-6">
+              <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-black/10 dark:border-white/10 rounded-3xl p-6 sm:p-8 shadow-xl text-left" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+                <div className={`flex items-center gap-3 mb-5 ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+                    <MapPin size={20} />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-slate-900 dark:text-white">{t.contactUs}</h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">Jalalabad Mosque & Islamic Centre</p>
+                  </div>
+                </div>
+
+                <div className="space-y-3.5 text-sm text-slate-700 dark:text-slate-200">
+                  <p className={`flex items-start gap-3 ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
+                    <strong className="text-slate-900 dark:text-white mt-0.5"><MapPin size={16} /></strong>
+                    <span>24-26 Dartmouth Rd, Selly Oak, Birmingham B29 6DR</span>
+                  </p>
+                  <p className={`flex items-center gap-3 ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
+                    <strong className="text-slate-900 dark:text-white"><Phone size={16} /></strong>
+                    <a href="tel:01214711556" className="hover:text-primary transition-colors font-medium">0121 471 1556</a>
+                  </p>
+                  <p className={`flex items-center gap-3 ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
+                    <strong className="text-slate-900 dark:text-white"><Mail size={16} /></strong>
+                    <a href="mailto:info@jalalabadmosque.org" className="hover:text-primary transition-colors font-medium">info@jalalabadmosque.org</a>
+                  </p>
+                  <p className={`flex items-center gap-3 ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
+                    <strong className="text-slate-900 dark:text-white"><Globe size={16} /></strong>
+                    <a href="https://www.jalalabadmosque.org" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors font-medium">www.jalalabadmosque.org</a>
+                  </p>
+                </div>
+              </div>
+
+              {/* Map */}
+              <div className="w-full h-56 rounded-3xl overflow-hidden shadow-xl border border-black/10 dark:border-white/10 relative">
+                <iframe 
+                  src="https://maps.google.com/maps?q=Jalalabad+Mosque,+24-26+Dartmouth+Rd,+Selly+Oak,+Birmingham+B29+6DR&t=&z=15&ie=UTF8&iwloc=&output=embed" 
+                  width="100%" 
+                  height="100%" 
+                  style={{ border: 0, position: 'absolute', top: 0, left: 0 }} 
+                  allowFullScreen 
+                  loading="lazy" 
+                  referrerPolicy="no-referrer-when-downgrade"
+                  title="Google Maps Location of Jalalabad Masjid"
+                ></iframe>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Global Footer */}
         <footer className="mt-16 pt-8 pb-4 border-t border-black/5 dark:border-white/5 animate-in fade-in duration-500">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-8">
-            <div className={`flex flex-col justify-center ${language === 'ar' ? 'items-end' : 'items-start'}`}>
-              <div className="bg-white p-2 rounded-2xl shadow-sm border border-black/5 inline-flex mb-4">
-                <img src="/logo.png" alt="Jalalabad Mosque Logo" className="h-16 object-contain" />
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-8">
+            <div className={`flex flex-col sm:flex-row items-center gap-4 ${language === 'ar' ? 'sm:flex-row-reverse' : ''}`}>
+              <div className="bg-white p-2 rounded-2xl shadow-md border border-black/5 inline-flex items-center justify-center transition-transform hover:scale-105 shrink-0">
+                <img src="/logo.png" alt="Jalalabad Mosque Logo" className="h-16 sm:h-18 w-auto object-contain" />
               </div>
-              <p className={`text-sm text-slate-600 dark:text-slate-200 max-w-sm ${language === 'ar' ? 'text-right' : 'text-left'}`}>
+              <p className={`text-xs sm:text-sm text-slate-600 dark:text-slate-300 max-w-md ${language === 'ar' ? 'text-right' : 'text-left'}`}>
                 {language === 'ar' ? 'يهدف مسجد جلال آباد والمركز الإسلامي في برمنغهام إلى تعزيز روح الأخوة والأخوات.' : 'Jalalabad Masjid & Islamic Centre at Birmingham aims to promote ethos of brotherhood and sisterhood.'}
               </p>
             </div>
-            
-            <div className={`space-y-4 ${language === 'ar' ? 'text-right' : 'text-left'}`}>
-              <div className={`flex items-center gap-3 ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
-                <div className="bg-primary/10 p-2 rounded-xl text-primary">
-                  <MapPin size={20} />
-                </div>
-                <h3 className="text-xl font-bold text-slate-900 dark:text-white">{t.contactUs}</h3>
-              </div>
-              <div className="space-y-3 text-sm text-slate-700 dark:text-slate-200">
-                <p className={`flex items-start gap-3 ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
-                  <strong className="text-slate-900 dark:text-white mt-0.5"><MapPin size={16} /></strong>
-                  <span>24-26 Dartmouth Rd, Selly Oak, Birmingham B29 6DR</span>
-                </p>
-                <p className={`flex items-center gap-3 ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
-                  <strong className="text-slate-900 dark:text-white"><Phone size={16} /></strong>
-                  <a href="tel:01214711556" className="hover:text-primary transition-colors">0121 471 1556</a>
-                </p>
-                <p className={`flex items-center gap-3 ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
-                  <strong className="text-slate-900 dark:text-white"><Mail size={16} /></strong>
-                  <a href="mailto:info@jalalabadmosque.org" className="hover:text-primary transition-colors">info@jalalabadmosque.org</a>
-                </p>
-                <p className={`flex items-center gap-3 ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
-                  <strong className="text-slate-900 dark:text-white"><Globe size={16} /></strong>
-                  <a href="https://www.jalalabadmosque.org" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">www.jalalabadmosque.org</a>
-                </p>
-              </div>
-            </div>
-
-            <div className="w-full h-48 lg:h-full min-h-[200px] rounded-2xl overflow-hidden shadow-sm border border-black/5 dark:border-white/5 relative">
-              <iframe 
-                src="https://maps.google.com/maps?q=Jalalabad+Mosque,+24-26+Dartmouth+Rd,+Selly+Oak,+Birmingham+B29+6DR&t=&z=15&ie=UTF8&iwloc=&output=embed" 
-                width="100%" 
-                height="100%" 
-                style={{ border: 0, position: 'absolute', top: 0, left: 0 }} 
-                allowFullScreen 
-                loading="lazy" 
-                referrerPolicy="no-referrer-when-downgrade"
-                title="Google Maps Location of Jalalabad Masjid"
-              ></iframe>
+            <div className="flex items-center gap-3 text-xs font-semibold">
+              <span className="px-3.5 py-1.5 rounded-full bg-primary/10 text-primary border border-primary/20">
+                Charity No: 1105603
+              </span>
             </div>
           </div>
           <div className={`text-xs text-slate-600 dark:text-slate-300 font-medium pt-6 border-t border-black/5 dark:border-white/10 flex flex-col md:flex-row justify-between items-center gap-2 ${language === 'ar' ? 'flex-row-reverse md:flex-row-reverse' : ''}`}>
             <p>© {new Date().getFullYear()} {t.appName}. {t.allRightsReserved}</p>
-            <p>Charity No: 1105603</p>
+            <p className="text-slate-500">Selly Oak, Birmingham B29 6DR</p>
           </div>
         </footer>
       </main>

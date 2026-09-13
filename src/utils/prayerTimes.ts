@@ -22,7 +22,20 @@ export const PRAYERS = [
   { id: 'ishā', name: 'Ishā', icon: 'MoonStar' },
 ] as const;
 
-export type PrayerId = typeof PRAYERS[number]['id'];
+export function getPrayersForDate(date: Date) {
+  const isFriday = date.getDay() === 5;
+  if (!isFriday) return PRAYERS;
+  return [
+    { id: 'fajr', name: 'Fajr', icon: 'Moon' },
+    { id: 'sunrise', name: 'Sunrise', icon: 'Sunrise' },
+    { id: 'jumuah', name: "Jumu'ah", icon: 'Users' },
+    { id: 'asr', name: 'Asr', icon: 'SunDim' },
+    { id: 'maghrib', name: 'Maghrib', icon: 'Sunset' },
+    { id: 'ishā', name: 'Ishā', icon: 'MoonStar' },
+  ];
+}
+
+export type PrayerId = typeof PRAYERS[number]['id'] | 'jumuah';
 
 export function parseTime(timeStr: string | undefined, date: Date): Date {
   if (!timeStr) return new Date(date);
@@ -35,10 +48,16 @@ export function parseTime(timeStr: string | undefined, date: Date): Date {
 export function getNextPrayer(todayData: PrayerData, currentTime: Date, tomorrowData?: PrayerData) {
   if (!todayData) return null;
 
+  const isFriday = currentTime.getDay() === 5;
+  const middayId = isFriday ? 'jumuah' : 'zuhr';
+  const middayName = isFriday ? "Jumu'ah" : "Zuhr";
+  const middayJamaah = isFriday ? '13:30' : todayData["zuhr_jama'h"];
+  const middayBegins = isFriday ? '12:45' : todayData.zuhr_begins;
+
   const prayerTimes = [
     { id: 'fajr', time: parseTime(todayData["fajr_jama'h"], currentTime), name: 'Fajr', beginsTime: parseTime(todayData.fajr_begins, currentTime) },
     { id: 'sunrise', time: parseTime(todayData.sunrise, currentTime), name: 'Sunrise', beginsTime: parseTime(todayData.sunrise, currentTime) },
-    { id: 'zuhr', time: parseTime(todayData["zuhr_jama'h"], currentTime), name: 'Zuhr', beginsTime: parseTime(todayData.zuhr_begins, currentTime) },
+    { id: middayId, time: parseTime(middayJamaah, currentTime), name: middayName, beginsTime: parseTime(middayBegins, currentTime) },
     { id: 'asr', time: parseTime(todayData["asr_jama'h"], currentTime), name: 'Asr', beginsTime: parseTime(todayData.asr_begins, currentTime) },
     { id: 'maghrib', time: parseTime(todayData["maghrib_jama'h"], currentTime), name: 'Maghrib', beginsTime: parseTime(todayData.maghrib_begins, currentTime) },
     { id: 'ishā', time: parseTime(todayData["ishā_jama'h"], currentTime), name: 'Ishā', beginsTime: parseTime(todayData.ishā_begins, currentTime) },
@@ -67,10 +86,16 @@ export function getNextPrayer(todayData: PrayerData, currentTime: Date, tomorrow
 export function getCurrentPrayerWindow(todayData: PrayerData, currentTime: Date, tomorrowData?: PrayerData) {
   if (!todayData) return null;
 
+  const isFriday = currentTime.getDay() === 5;
+  const middayId = isFriday ? 'jumuah' : 'zuhr';
+  const middayName = isFriday ? "Jumu'ah" : "Zuhr";
+  const middayJamaah = isFriday ? '13:30' : todayData["zuhr_jama'h"];
+  const middayBegins = isFriday ? '12:45' : todayData.zuhr_begins;
+
   const prayers = [
     { id: 'fajr', time: parseTime(todayData["fajr_jama'h"], currentTime), begins: parseTime(todayData.fajr_begins, currentTime), name: 'Fajr' },
     { id: 'sunrise', time: parseTime(todayData.sunrise, currentTime), begins: parseTime(todayData.sunrise, currentTime), name: 'Sunrise' },
-    { id: 'zuhr', time: parseTime(todayData["zuhr_jama'h"], currentTime), begins: parseTime(todayData.zuhr_begins, currentTime), name: 'Zuhr' },
+    { id: middayId, time: parseTime(middayJamaah, currentTime), begins: parseTime(middayBegins, currentTime), name: middayName },
     { id: 'asr', time: parseTime(todayData["asr_jama'h"], currentTime), begins: parseTime(todayData.asr_begins, currentTime), name: 'Asr' },
     { id: 'maghrib', time: parseTime(todayData["maghrib_jama'h"], currentTime), begins: parseTime(todayData.maghrib_begins, currentTime), name: 'Maghrib' },
     { id: 'ishā', time: parseTime(todayData["ishā_jama'h"], currentTime), begins: parseTime(todayData.ishā_begins, currentTime), name: 'Ishā' },
@@ -128,7 +153,7 @@ export function getNextJumuahTime(currentTime: Date): Date {
   let daysUntilFriday = (5 - currentDay + 7) % 7;
   
   const jumuahTime = new Date(currentTime);
-  jumuahTime.setHours(13, 15, 0, 0); // 13:15 for First Khutbah
+  jumuahTime.setHours(13, 30, 0, 0); // 13:30 for Jumu'ah Jama'ah
   
   if (daysUntilFriday === 0 && currentTime > jumuahTime) {
     // It's Friday but past Jumu'ah time, so next Jumu'ah is next week
@@ -137,7 +162,7 @@ export function getNextJumuahTime(currentTime: Date): Date {
   
   const nextJumuah = new Date(currentTime);
   nextJumuah.setDate(currentTime.getDate() + daysUntilFriday);
-  nextJumuah.setHours(13, 15, 0, 0);
+  nextJumuah.setHours(13, 30, 0, 0);
   
   return nextJumuah;
 }
