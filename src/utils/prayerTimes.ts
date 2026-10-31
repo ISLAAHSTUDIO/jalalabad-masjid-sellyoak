@@ -51,8 +51,8 @@ export function getNextPrayer(todayData: PrayerData, currentTime: Date, tomorrow
   const isFriday = currentTime.getDay() === 5;
   const middayId = isFriday ? 'jumuah' : 'zuhr';
   const middayName = isFriday ? "Jumu'ah" : "Zuhr";
-  const middayJamaah = isFriday ? '13:30' : todayData["zuhr_jama'h"];
-  const middayBegins = isFriday ? '12:45' : todayData.zuhr_begins;
+  const middayJamaah = isFriday ? '13:15' : todayData["zuhr_jama'h"];
+  const middayBegins = isFriday ? '12:30' : todayData.zuhr_begins;
 
   const prayerTimes = [
     { id: 'fajr', time: parseTime(todayData["fajr_jama'h"], currentTime), name: 'Fajr', beginsTime: parseTime(todayData.fajr_begins, currentTime) },
@@ -89,8 +89,8 @@ export function getCurrentPrayerWindow(todayData: PrayerData, currentTime: Date,
   const isFriday = currentTime.getDay() === 5;
   const middayId = isFriday ? 'jumuah' : 'zuhr';
   const middayName = isFriday ? "Jumu'ah" : "Zuhr";
-  const middayJamaah = isFriday ? '13:30' : todayData["zuhr_jama'h"];
-  const middayBegins = isFriday ? '12:45' : todayData.zuhr_begins;
+  const middayJamaah = isFriday ? '13:15' : todayData["zuhr_jama'h"];
+  const middayBegins = isFriday ? '12:30' : todayData.zuhr_begins;
 
   const prayers = [
     { id: 'fajr', time: parseTime(todayData["fajr_jama'h"], currentTime), begins: parseTime(todayData.fajr_begins, currentTime), name: 'Fajr' },
@@ -153,7 +153,7 @@ export function getNextJumuahTime(currentTime: Date): Date {
   let daysUntilFriday = (5 - currentDay + 7) % 7;
   
   const jumuahTime = new Date(currentTime);
-  jumuahTime.setHours(13, 30, 0, 0); // 13:30 for Jumu'ah Jama'ah
+  jumuahTime.setHours(13, 15, 0, 0); // 13:15 for Jumu'ah Jama'ah
   
   if (daysUntilFriday === 0 && currentTime > jumuahTime) {
     // It's Friday but past Jumu'ah time, so next Jumu'ah is next week
@@ -162,7 +162,7 @@ export function getNextJumuahTime(currentTime: Date): Date {
   
   const nextJumuah = new Date(currentTime);
   nextJumuah.setDate(currentTime.getDate() + daysUntilFriday);
-  nextJumuah.setHours(13, 30, 0, 0);
+  nextJumuah.setHours(13, 15, 0, 0);
   
   return nextJumuah;
 }

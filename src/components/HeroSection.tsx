@@ -168,14 +168,14 @@ export const HeroSection: React.FC<ExtendedHeroSectionProps> = ({
                   <span className="text-slate-300 font-semibold">
                     {nextPrayer.id === 'sunrise'
                       ? (language === 'ar' ? 'وقت الشروق:' : 'Sunrise Time:')
-                      : (language === 'ar' ? 'الجماعة:' : 'Jama\'ah:')
+                      : (language === 'ar' ? 'الجماعة:' : 'Jamā\'ah:')
                     }
                   </span>
                   <span className="font-black text-white text-base md:text-lg">
                     {nextPrayer.id === 'sunrise' 
                       ? format12Hour(todayData.sunrise, language === 'ar' ? 'ar-SA' : 'en-US')
                       : nextPrayer.id === 'jumuah'
-                        ? (language === 'ar' ? '1:30 م' : '1:30 PM')
+                        ? (language === 'ar' ? '1:15 م' : '1:15 PM')
                         : format12Hour(todayData[`${nextPrayer.id}_jama'h` as keyof PrayerData] as string, language === 'ar' ? 'ar-SA' : 'en-US')
                     }
                   </span>
@@ -185,13 +185,13 @@ export const HeroSection: React.FC<ExtendedHeroSectionProps> = ({
                   <div className="bg-black/60 border-2 border-white/20 px-4 py-2 rounded-2xl shadow-md backdrop-blur-md flex items-center gap-2">
                     <span className="text-slate-300 font-semibold">
                       {nextPrayer.id === 'jumuah' 
-                        ? (language === 'ar' ? 'بداية البيان:' : 'Bayan Start:') 
+                        ? (language === 'ar' ? 'بداية البيان:' : 'Bayān Start:') 
                         : (language === 'ar' ? 'البداية:' : 'Begins:')
                       }
                     </span>
                     <span className="font-bold text-white/95">
                       {nextPrayer.id === 'jumuah'
-                        ? (language === 'ar' ? '12:45 م' : '12:45 PM')
+                        ? (language === 'ar' ? '12:30 م' : '12:30 PM')
                         : format12Hour(todayData[`${nextPrayer.id}_begins` as keyof PrayerData] as string, language === 'ar' ? 'ar-SA' : 'en-US')
                       }
                     </span>

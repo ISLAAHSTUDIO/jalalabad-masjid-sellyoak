@@ -260,7 +260,7 @@ export default function App() {
     const isFriday = currentTime.getDay() === 5;
     const jamaahTimes = [
       { name: 'Fajr', time: todayData["fajr_jama'h"] },
-      { name: isFriday ? "Jumu'ah" : 'Zuhr', time: isFriday ? '13:30' : todayData["zuhr_jama'h"] },
+      { name: isFriday ? "Jumu'ah" : 'Zuhr', time: isFriday ? '13:15' : todayData["zuhr_jama'h"] },
       { name: 'Asr', time: todayData["asr_jama'h"] },
       { name: 'Maghrib', time: todayData["maghrib_jama'h"] },
       { name: 'Isha', time: todayData["ishā_jama'h"] },
@@ -817,18 +817,18 @@ export default function App() {
                           <p className={`text-[10px] uppercase font-bold tracking-widest ${isNext ? variant.accentText : 'text-slate-600 dark:text-slate-300'}`}>{t.jamah}</p>
                           <p className={`text-3xl font-black ${isNext ? 'text-slate-900 dark:text-white' : 'text-slate-900 dark:text-white'}`}>
                             {prayer.id === 'jumuah' 
-                              ? (language === 'ar' ? '1:30 م' : '1:30 PM')
+                              ? (language === 'ar' ? '1:15 م' : '1:15 PM')
                               : format12Hour(todayData[jamahKey] as string, language === 'ar' ? 'ar-SA' : 'en-US')
                             }
                           </p>
                         </div>
                         <div className={`space-y-1.5 ${language === 'ar' ? `text-left border-r pr-6 ${isNext ? variant.nextDividerBorder : variant.dividerBorder}` : `text-right border-l pl-6 ${isNext ? variant.nextDividerBorder : variant.dividerBorder}`}`}>
                           <p className={`text-[10px] uppercase font-bold tracking-widest ${isNext ? variant.accentText : 'text-slate-600 dark:text-slate-300'}`}>
-                            {prayer.id === 'jumuah' ? (language === 'ar' ? 'بداية البيان' : 'Bayan Start') : t.begins}
+                            {prayer.id === 'jumuah' ? (language === 'ar' ? 'بداية البيان' : 'Bayān Start') : t.begins}
                           </p>
                           <p className={`text-lg font-bold ${isNext ? 'text-slate-900 dark:text-white' : 'text-slate-800 dark:text-slate-200'}`}>
                             {prayer.id === 'jumuah'
-                              ? (language === 'ar' ? '12:45 م' : '12:45 PM')
+                              ? (language === 'ar' ? '12:30 م' : '12:30 PM')
                               : format12Hour(todayData[beginsKey] as string, language === 'ar' ? 'ar-SA' : 'en-US')
                             }
                           </p>
@@ -1280,13 +1280,13 @@ export default function App() {
                   {/* Timings Pills with Translucent Backdrop Blur */}
                   <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 text-slate-200 text-sm md:text-base">
                     <div className="bg-black/60 border-2 border-white/20 px-4 py-2 rounded-2xl shadow-md backdrop-blur-md flex items-center gap-2">
-                      <span className="text-slate-300 font-semibold">{language === 'ar' ? 'الخطبة والجماعة:' : 'Khutbah & Jama\'ah:'}</span>
-                      <span className="font-black text-white text-base md:text-lg">1:30 PM</span>
+                      <span className="text-slate-300 font-semibold">{language === 'ar' ? 'الخطبة والجماعة:' : 'Khutbah & Jamā\'ah:'}</span>
+                      <span className="font-black text-white text-base md:text-lg">1:15 PM</span>
                     </div>
 
                     <div className="bg-black/60 border-2 border-white/20 px-4 py-2 rounded-2xl shadow-md backdrop-blur-md flex items-center gap-2">
-                      <span className="text-slate-300 font-semibold">{language === 'ar' ? 'بداية البيان:' : 'Bayan Start:'}</span>
-                      <span className="font-bold text-white/95">12:45 PM</span>
+                      <span className="text-slate-300 font-semibold">{language === 'ar' ? 'بداية البيان:' : 'Bayān Start:'}</span>
+                      <span className="font-bold text-white/95">12:30 PM</span>
                     </div>
                   </div>
                 </div>
@@ -1351,17 +1351,17 @@ export default function App() {
                 <div className="flex items-center justify-between p-5 bg-black/60 border-2 border-white/15 backdrop-blur-md rounded-2xl shadow-lg hover:border-emerald-400/50 transition-all group">
                   <div className="flex items-center gap-3">
                     <div className="w-3 h-3 rounded-full bg-emerald-400 shadow-[0_0_10px_#10b981]"></div>
-                    <span className="font-semibold text-slate-200 text-base sm:text-lg">{language === 'ar' ? 'بداية البيان' : 'Bayan Start'}</span>
+                    <span className="font-semibold text-slate-200 text-base sm:text-lg">{language === 'ar' ? 'بداية البيان' : 'Bayān Start'}</span>
                   </div>
-                  <span className="text-2xl sm:text-3xl font-black text-emerald-400 tracking-tight">12:45 PM</span>
+                  <span className="text-2xl sm:text-3xl font-black text-emerald-400 tracking-tight">12:30 PM</span>
                 </div>
 
                 <div className="flex items-center justify-between p-5 bg-black/60 border-2 border-white/15 backdrop-blur-md rounded-2xl shadow-lg hover:border-emerald-400/50 transition-all group">
                   <div className="flex items-center gap-3">
                     <div className="w-3 h-3 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_10px_#10b981]"></div>
-                    <span className="font-semibold text-slate-200 text-base sm:text-lg">{language === 'ar' ? 'بداية الخطبة والجماعة' : 'Khutbah & Jama\'ah'}</span>
+                    <span className="font-semibold text-slate-200 text-base sm:text-lg">{language === 'ar' ? 'بداية الخطبة والجماعة' : 'Khutbah & Jamā\'ah'}</span>
                   </div>
-                  <span className="text-2xl sm:text-3xl font-black text-emerald-400 tracking-tight">1:30 PM</span>
+                  <span className="text-2xl sm:text-3xl font-black text-emerald-400 tracking-tight">1:15 PM</span>
                 </div>
               </div>
 
